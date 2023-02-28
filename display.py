@@ -36,7 +36,7 @@ resume_img = pygame.image.load(
     "image/button/button_resume.png").convert_alpha()
 options_img = pygame.image.load(
     "image/button/button_options.png").convert_alpha()
-quit_img = pygame.image.load("image/button/button_quit.png").convert_alpha()
+#quit_img = pygame.image.load("image/button/button_quit.png").convert_alpha()
 video_img = pygame.image.load("image/button/button_video.png").convert_alpha()
 audio_img = pygame.image.load("image/button/button_audio.png").convert_alpha()
 keys_img = pygame.image.load("image/button/button_keys.png").convert_alpha()
