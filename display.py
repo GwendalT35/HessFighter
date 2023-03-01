@@ -155,6 +155,7 @@ while run:
     # verifie si le jeu est en pause
     if game_paused == True:
         # Empeche les joueurs de jouer
+        # test
         # verifie letat du menu
         if menu_state == "main":
             # boutons de pause
