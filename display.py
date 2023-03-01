@@ -6,7 +6,7 @@ from fighter import Fighter
 
 mixer.init()
 pygame.init()
-#test
+
 # creer une fenetre de jeu
 SCREEN_WIDTH = 1000
 SCREEN_HEIGHT = 600
