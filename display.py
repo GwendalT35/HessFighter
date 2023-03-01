@@ -1,4 +1,4 @@
-from tkinter import ROUND
+import tkinter
 import pygame
 import button
 from pygame import mixer
@@ -17,9 +17,9 @@ pygame.display.set_caption("Fighter")
 # variable du jeu
 game_paused = False
 menu_state = "main"
-
+game_started = False
 # definir la police
-font = pygame.font.Font("image/turok.ttf", 30)
+font = pygame.font.Font("image/Turok.ttf", 30)
 
 # définir le taux de rafraîchissement
 clock = pygame.time.Clock()
@@ -32,6 +32,8 @@ WHITE = (255, 255, 255)
 TEXT_COL = (255, 255, 255)
 
 # charger les images du menu
+solo_img = pygame.image.load(
+    "image/button/button_solo.png").convert_alpha()
 resume_img = pygame.image.load(
     "image/button/button_resume.png").convert_alpha()
 options_img = pygame.image.load(
@@ -43,13 +45,31 @@ keys_img = pygame.image.load("image/button/button_keys.png").convert_alpha()
 back_img = pygame.image.load("image/button/button_back.png").convert_alpha()
 
 # creation du bouton
-resume_button = button.Button(410, 125, resume_img, 1)
-options_button = button.Button(402, 250, options_img, 1)
-quit_button = button.Button(442, 375, quit_img, 1)
-video_button = button.Button(330, 125, video_img, 1)
-audio_button = button.Button(330, 225, audio_img, 1)
-keys_button = button.Button(352, 325, keys_img, 1)
-back_button = button.Button(438, 450, back_img, 1)
+button_list = []
+# Main menu
+solo_button = button.Button(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 4, solo_img, 1,
+                            (SCREEN_WIDTH, SCREEN_HEIGHT))
+options_button = button.Button(
+    SCREEN_WIDTH // 2, solo_button.y + solo_button.y, options_img, 1, (SCREEN_WIDTH, SCREEN_HEIGHT))
+quit_button = button.Button(SCREEN_WIDTH // 2, options_button.y + options_button.y / 2, quit_img, 1,
+                            (SCREEN_WIDTH, SCREEN_HEIGHT))
+
+# Option Menu
+video_button = button.Button(
+    SCREEN_WIDTH // 2, SCREEN_HEIGHT // 5, video_img, 1, (SCREEN_WIDTH, SCREEN_HEIGHT))
+
+audio_button = button.Button(
+    SCREEN_WIDTH // 2, video_button.y + video_button.y, audio_img, 1, (SCREEN_WIDTH, SCREEN_HEIGHT))
+
+keys_button = button.Button(SCREEN_WIDTH // 2, audio_button.y + audio_button.y / 2, keys_img, 1,
+                            (SCREEN_WIDTH, SCREEN_HEIGHT))
+
+back_button = button.Button(SCREEN_WIDTH // 2, keys_button.y + keys_button.y / 3, back_img, 1,
+                            (SCREEN_WIDTH, SCREEN_HEIGHT))
+
+# Pause Menu
+resume_button = button.Button(
+    SCREEN_WIDTH // 2, SCREEN_HEIGHT // 4, resume_img, 1, (SCREEN_WIDTH, SCREEN_HEIGHT))
 
 # definir variable jeu
 intro_count = 3
@@ -84,7 +104,7 @@ ricard_fx = pygame.mixer.Sound("audio/bonk.mp3")
 ricard_fx.set_volume(0.3)
 magic_fx = pygame.mixer.Sound("audio/bonk.mp3")
 magic_fx.set_volume(0.3)
-#victory_fx = pygame.mixer.Sound("audio/siuu.mp3")
+# victory_fx = pygame.mixer.Sound("audio/siuu.mp3")
 # victory_fx.set_volume(0.3)
 
 
@@ -135,13 +155,24 @@ def draw_health_bar(health, x, y):
     pygame.draw.rect(screen, YELLOW, (x, y, 400 * ratio, 30))
 
 
-# creation de deux instance de combattants
-coco = Fighter(1, 200, 310, False, COCO_DATA, coco_sheet,
-               COCO_ANIMATION_STEPS, ricard_fx)
-'fighter_1 = Fighter(1, 200, 310, False, WARRIOR_DATA, warrior_sheet, WARRIOR_ANIMATION_STEPS, sword_fx)'
-fighter_2 = Fighter(2, 700, 310, True, WIZARD_DATA,
-                    wizard_sheet, WIZARD_ANIMATION_STEPS, magic_fx)
+def rem_button(buttons_list):
+    for button in buttons_list:
+        buttons_list.remove(button)
 
+
+# creation de deux instance de combattants
+fighter_choose = dict()
+fighter_choose["coco"] = (COCO_DATA, coco_sheet,
+                          COCO_ANIMATION_STEPS, ricard_fx)
+fighter_choose["wizard"] = (WIZARD_DATA,
+                            wizard_sheet, WIZARD_ANIMATION_STEPS, magic_fx)
+
+
+choix_1 = "wizard"
+choix_2 = "wizard"
+
+fighter_1 = Fighter(1, 200, 310, False, *fighter_choose[choix_1])
+fighter_2 = Fighter(2, 700, 310, True, *fighter_choose[choix_2])
 
 # boucle de jeu
 run = True
@@ -151,94 +182,114 @@ while run:
 
     # dessiner arriere plan
     draw_bg()
+    if menu_state == "main":
+        button_list = [solo_button, options_button, quit_button]
+        if solo_button.draw(screen):
+            # enlever le menu pour lancer le jeu
+            menu_state = "in_game"
+        if options_button.draw(screen):
+            menu_state = "options"
+        if quit_button.draw(screen):
+            run = False
+    elif menu_state == "in_game":
+        rem_button(button_list)
+        game_started = True
+        # afficher stats des joueurs
+        draw_health_bar(fighter_1.health, 20, 30)
+        draw_health_bar(fighter_2.health, 580, 30)
+        draw_text("P1: " + str(score[0]), score_font, RED, 20, 60)
+        draw_text("P2: " + str(score[1]), score_font, RED, 580, 60)
+        # changer le compte a rebours
+        if intro_count <= 0:
+            # Deplacement joueurs
+            fighter_1.move(SCREEN_WIDTH, SCREEN_HEIGHT,
+                           screen, fighter_2, round_over)
+            fighter_2.move(SCREEN_WIDTH, SCREEN_HEIGHT,
+                           screen, fighter_1, round_over)
+        else:
+            # affichage du compte a rebours
+            draw_text(str(intro_count), count_font, RED,
+                      SCREEN_WIDTH / 2, SCREEN_HEIGHT / 3)
+            # evolution du temps
+            if (pygame.time.get_ticks() - last_count_update) >= 1000:
+                intro_count -= 1
+                last_count_update = pygame.time.get_ticks()
 
+        # evoluer combattants
+        fighter_1.update()
+        fighter_2.update()
+
+        # dessiner fighter
+        fighter_1.draw(screen)
+        fighter_2.draw(screen)
+
+        # verifie si le joueur a perdu
+        if round_over == False:
+            if fighter_1.alive == False:
+                score[1] += 1
+                round_over = True
+                round_over_time = pygame.time.get_ticks()
+            elif fighter_2.alive == False:
+                score[0] += 1
+                round_over = True
+                round_over_time = pygame.time.get_ticks()
+        else:
+            # affiche l'image de victoire
+            screen.blit(victory_img, (300, 90))
+            # victory_fx.play()
+            if pygame.time.get_ticks() - round_over_time > ROUND_OVER_COOLDOWN:
+                round_over = False
+                intro_count = 3
+                fighter_1
+                fighter_2
+        draw_text("Press ECHAP to pause", font, TEXT_COL, 15, 560)
     # verifie si le jeu est en pause
+    elif menu_state == "options":
+        rem_button(button_list)
+        button_list = [video_button, audio_button, keys_button, back_button]
+        print(button_list)
+        # options du menu options
+        if video_button.draw(screen):
+            rem_button(button_list)
+            print("video")
+        if audio_button.draw(screen):
+            rem_button(button_list)
+            print("audio")
+        if keys_button.draw(screen):
+            rem_button(button_list)
+            menu_state == "key_binding"
+        if back_button.draw(screen):
+            rem_button(button_list)
+            if game_started == True:
+                menu_state = "in_game"
+            else:
+                print("Main")
+                menu_state = "main"
+        elif menu_state == "key_binding":
+            rem_button(button_list)
+            print("key_binding")
     if game_paused == True:
-        # Empeche les joueurs de jouer
+        print("pause")
         # verifie letat du menu
-        if menu_state == "main":
-            # boutons de pause
+        if menu_state == "pause":
+            button_list = [resume_button, options_button, quit_button]
+            # menu pause
             if resume_button.draw(screen):
+                rem_button(button_list)
                 game_paused = False
+                menu_state = "in_game"
             if options_button.draw(screen):
+                rem_button(button_list)
                 menu_state = "options"
             if quit_button.draw(screen):
                 run = False
-        # verifie si le menu option est ouvert
-        if menu_state == "options":
-            # options du menu options
-            if video_button.draw(screen):
-                print("video")
-            if audio_button.draw(screen):
-                print("audio")
-            if keys_button.draw(screen):
-                print("keys")
-            if back_button.draw(screen):
-                menu_state = "main"
-    else:
-        draw_text("Press ECHAP to pause", font, TEXT_COL, 15, 560)
-
-    # afficher stats des joueurs
-    draw_health_bar(coco.health, 20, 30)
-    'draw_health_bar(fighter_1.health,20,30)'
-    draw_health_bar(fighter_2.health, 580, 30)
-    draw_text("P1: " + str(score[0]), score_font, RED, 20, 60)
-    draw_text("P2: " + str(score[1]), score_font, RED, 580, 60)
-    # changer le compte a rebours
-    if intro_count <= 0:
-        # Deplacement joueurs
-        coco.move(SCREEN_WIDTH, SCREEN_HEIGHT,
-                  screen, fighter_2, round_over, True)
-        'fighter_1.move(SCREEN_WIDTH, SCREEN_HEIGHT, screen, fighter_2, round_over)'
-        fighter_2.move(SCREEN_WIDTH, SCREEN_HEIGHT,
-                       screen, coco, round_over, True)
-    else:
-        # affichage du compte a rebours
-        draw_text(str(intro_count), count_font, RED,
-                  SCREEN_WIDTH / 2, SCREEN_HEIGHT / 3)
-        # evolution du temps
-        if (pygame.time.get_ticks() - last_count_update) >= 1000:
-            intro_count -= 1
-            last_count_update = pygame.time.get_ticks()
-
-    # evoluer combattants
-    coco.update()
-    'fighter_1.update()'
-    fighter_2.update()
-
-    # dessiner fighter
-    coco.draw(screen)
-    'fighter_1.draw(screen)'
-    fighter_2.draw(screen)
-
-    # verifie si le joueur a perdu
-    if round_over == False:
-        if coco.alive == False:
-            score[1] += 1
-            round_over = True
-            round_over_time = pygame.time.get_ticks()
-        elif fighter_2.alive == False:
-            score[0] += 1
-            round_over = True
-            round_over_time = pygame.time.get_ticks()
-    else:
-        # affiche l'image de victoire
-        screen.blit(victory_img, (300, 90))
-        # victory_fx.play()
-        if pygame.time.get_ticks() - round_over_time > ROUND_OVER_COOLDOWN:
-            round_over = False
-            intro_count = 3
-            coco = Fighter(1, 200, 310, False, COCO_DATA,
-                           coco_sheet, COCO_ANIMATION_STEPS, sword_fx)
-            'fighter_1 = Fighter(1, 200, 310, False, WARRIOR_DATA, warrior_sheet, WARRIOR_ANIMATION_STEPS, sword_fx)'
-            fighter_2 = Fighter(2, 700, 310, True, WIZARD_DATA,
-                                wizard_sheet, WIZARD_ANIMATION_STEPS, magic_fx)
 
     # gestionnaire d'événement
     for event in pygame.event.get():
         if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_ESCAPE:
+            if event.key == pygame.K_ESCAPE and menu_state == "in_game":
                 game_paused = True
+                menu_state = "pause"
         if event.type == pygame.QUIT:
             run = False
 
