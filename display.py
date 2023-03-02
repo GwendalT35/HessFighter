@@ -42,6 +42,10 @@ audio_img = pygame.image.load("image/button/button_audio.png").convert_alpha()
 keys_img = pygame.image.load("image/button/button_keys.png").convert_alpha()
 back_img = pygame.image.load("image/button/button_back.png").convert_alpha()
 
+#charger images pour le choix des personnages
+playerCoco_img = pygame.image.load("image/Coco/Coco.png")
+playerWizard_img = pygame.image.load("image/Fighter2/wizardChoose.png")
+
 # creation du bouto
 # Main menu
 solo_button = button.Button(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 4, solo_img, 1,
@@ -72,6 +76,12 @@ back_button = button.Button(SCREEN_WIDTH // 2,
 # Pause Menu
 resume_button = button.Button(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 4,
                               resume_img, 1, (SCREEN_WIDTH, SCREEN_HEIGHT))
+
+coco_button = button.Button(100, 100, playerCoco_img, 1,
+                            (SCREEN_WIDTH, SCREEN_HEIGHT))
+wizard_button = button.Button(coco_button.width + coco_button.width / 2, 100,
+                              playerWizard_img, 1,
+                              (SCREEN_WIDTH, SCREEN_HEIGHT))
 
 # definir variable jeu
 intro_count = 3
@@ -111,6 +121,10 @@ magic_fx.set_volume(0.3)
 
 #charger image du main menu
 main_image = pygame.image.load("image/background/main.gif").convert_alpha()
+
+#charger image du choix perso
+bg_choixPerso = pygame.image.load("image/background/choix_perso.gif")
+
 # charger image en arriere plan
 background_image = pygame.image.load(
     "image/background/back.jpg").convert_alpha()
@@ -163,12 +177,9 @@ fighter_choose["coco"] = (COCO_DATA, coco_sheet, COCO_ANIMATION_STEPS,
 fighter_choose["wizard"] = (WIZARD_DATA, wizard_sheet, WIZARD_ANIMATION_STEPS,
                             magic_fx, 10)
 
-choix_1 = "coco"
-choix_2 = "wizard"
+choix = []
 
-fighter_1 = Fighter(1, 200, 310, False, *fighter_choose[choix_1])
-fighter_2 = Fighter(2, 700, 310, True, *fighter_choose[choix_2])
-
+create_Fighters = True
 # boucle de jeu
 run = True
 while run:
@@ -179,13 +190,28 @@ while run:
         draw_bg(main_image)
         if solo_button.draw(screen):
             # enlever le menu pour lancer le jeu
-            menu_state = "in_game"
+            menu_state = "choix_perso"
         if options_button.draw(screen):
             menu_state = "options"
         if quit_button.draw(screen):
             print("quitting")
             run = False
+    elif menu_state == "choix_perso":
+        draw_bg(bg_choixPerso)
+        playerToChoose = 0
+        if coco_button.draw(screen):
+            choix.append("coco")
+        if wizard_button.draw(screen):
+            choix.append("wizard")
+        if len(choix) == 2:
+            menu_state = "in_game"
+
     elif menu_state == "in_game":
+        if (create_Fighters == True):
+            fighter_1 = Fighter(1, 200, 310, False, *fighter_choose[choix[0]])
+            fighter_2 = Fighter(2, 700, 310, True, *fighter_choose[choix[1]])
+            create_Fighters = False
+
         draw_bg(background_image)
         game_started = True
 
@@ -239,10 +265,7 @@ while run:
             if pygame.time.get_ticks() - round_over_time > ROUND_OVER_COOLDOWN:
                 round_over = False
                 intro_count = 3
-                fighter_1 = Fighter(1, 200, 310, False,
-                                    *fighter_choose[choix_1])
-                fighter_2 = Fighter(2, 700, 310, True,
-                                    *fighter_choose[choix_2])
+                create_Fighters = True
         draw_text("Press ECHAP to pause", font, TEXT_COL, 15, 560)
 
     elif menu_state == "pause":
