@@ -2,6 +2,7 @@ import pygame
 
 
 class Button():
+
     def __init__(self, x, y, image, scale, windowSize):
         self.windowX = windowSize[0]
         self.windowY = windowSize[1]
@@ -32,8 +33,8 @@ class Button():
         if pygame.mouse.get_pressed()[0] == 0:
             self.clicked = False
 
-        # draw button on screen
-            surface.blit(self.image, (self.x - self.width //
-                         2, self.y - self.height // 2))
+            # draw button on screen
+            surface.blit(self.image,
+                         (self.x - self.width // 2, self.y - self.height // 2))
 
         return action

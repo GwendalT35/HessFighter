@@ -1,9 +1,10 @@
 import pygame
-import time
 
 
 class Fighter():
-    def __init__(self, player, x, y, flip, data, sprite_sheet, animation_steps, sound):
+
+    def __init__(self, player, x, y, flip, data, sprite_sheet, animation_steps,
+                 sound, attaque_damage):
         self.player = player
         self.size = data[0]
         self.image_scale = data[1]
@@ -25,16 +26,21 @@ class Fighter():
         self.hit = False
         self.health = 100
         self.alive = True
+        self.attack_dmg = attaque_damage
+        self.damageReceived = 0
 
     def load_images(self, sprite_sheet, animation_steps):
         animation_list = []
         for y, animation in enumerate(animation_steps):
             temp_img_list = []
             for x in range(animation):
-                temp_img = sprite_sheet.subsurface(
-                    x * self.size, y * self.size, self.size, self.size)
-                temp_img_list.append(pygame.transform.scale(
-                    temp_img, (self.size * self.image_scale, self.size * self.image_scale)))
+                temp_img = sprite_sheet.subsurface(x * self.size,
+                                                   y * self.size, self.size,
+                                                   self.size)
+                temp_img_list.append(
+                    pygame.transform.scale(temp_img,
+                                           (self.size * self.image_scale,
+                                            self.size * self.image_scale)))
             animation_list.append(temp_img_list)
         return animation_list
 
@@ -49,7 +55,7 @@ class Fighter():
         # get keypresses
         key = pygame.key.get_pressed()
 
-       #
+        #
         if self.attacking == False and self.alive == True and round_over == False:
             # verifie les controles du joueur 1
             if self.player == 1:
@@ -68,9 +74,9 @@ class Fighter():
                 # attaque
                 if key[pygame.K_r] or key[pygame.K_t]:
                     self.attack(target)
-                    if key[pygame.K_a]:
+                    if key[pygame.K_r]:
                         self.attack_type = 1
-                    if key[pygame.K_e]:
+                    if key[pygame.K_t]:
                         self.attack_type = 2
 
             # verifie les controles du joueur 2
@@ -122,7 +128,9 @@ class Fighter():
         self.rect.x += dx
         self.rect.y += dy
 
-   # Evolution animation
+
+# Evolution animation
+
     def update(self):
         # verifie quel actions le jouer fait
         if self.health <= 0:
@@ -163,6 +171,7 @@ class Fighter():
                     self.attack_cooldown = 20
                 # verifie que les degats ont ete recus
                 if self.action == 5:
+                    self.health -= self.damageReceived
                     self.hit = False
                     # arrete le coup dun joueur si il etait au milieu dune attaque
                     self.attacking = False
@@ -173,11 +182,12 @@ class Fighter():
             # execution de l'attaque
             self.attacking = True
             self.attack_sound.play()
-            attacking_rect = pygame.Rect(self.rect.centerx - (
-                2 * self.rect.width * self.flip), self.rect.y, 2 * self.rect.width, self.rect.height)
+            attacking_rect = pygame.Rect(
+                self.rect.centerx - (2 * self.rect.width * self.flip),
+                self.rect.y, 2 * self.rect.width, self.rect.height)
             if attacking_rect.colliderect(target.rect):
-                target.health -= 10
                 target.hit = True
+                target.damageReceived = self.attack_dmg
 
     def update_action(self, new_action):
         # verifie si la nouvelle action est different de la precedente
@@ -189,5 +199,5 @@ class Fighter():
 
     def draw(self, surface):
         img = pygame.transform.flip(self.image, self.flip, False)
-        surface.blit(img, (self.rect.x - (self.offset[0] * self.image_scale), self.rect.y - (
-            self.offset[1] * self.image_scale)))
+        surface.blit(img, (self.rect.x - (self.offset[0] * self.image_scale),
+                           self.rect.y - (self.offset[1] * self.image_scale)))
