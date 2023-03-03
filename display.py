@@ -42,7 +42,7 @@ audio_img = pygame.image.load("image/button/button_audio.png").convert_alpha()
 keys_img = pygame.image.load("image/button/button_keys.png").convert_alpha()
 back_img = pygame.image.load("image/button/button_back.png").convert_alpha()
 
-#charger images pour le choix des personnages
+# charger images pour le choix des personnages
 playerCoco_img = pygame.image.load("image/Coco/Coco.png")
 playerWizard_img = pygame.image.load("image/Fighter2/wizardChoose.png")
 
@@ -119,10 +119,10 @@ magic_fx.set_volume(0.3)
 # victory_fx = pygame.mixer.Sound("audio/siuu.mp3")
 # victory_fx.set_volume(0.3)
 
-#charger image du main menu
+# charger image du main menu
 main_image = pygame.image.load("image/background/main.gif").convert_alpha()
 
-#charger image du choix perso
+# charger image du choix perso
 bg_choixPerso = pygame.image.load("image/background/choix_perso.gif")
 
 # charger image en arriere plan
@@ -198,14 +198,14 @@ while run:
             run = False
     elif menu_state == "choix_perso":
         draw_bg(bg_choixPerso)
-        playerToChoose = 0
+        draw_text(f"Au joueur {len(choix) + 1} de choisir.",
+                  font, TEXT_COL, 0 + SCREEN_WIDTH // 3, SCREEN_HEIGHT - SCREEN_HEIGHT//4)
         if coco_button.draw(screen):
             choix.append("coco")
         if wizard_button.draw(screen):
             choix.append("wizard")
         if len(choix) == 2:
             menu_state = "in_game"
-
     elif menu_state == "in_game":
         if (create_Fighters == True):
             fighter_1 = Fighter(1, 200, 310, False, *fighter_choose[choix[0]])
