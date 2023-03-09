@@ -1,4 +1,5 @@
 import pygame
+import time
 
 
 class Fighter():
@@ -171,11 +172,11 @@ class Fighter():
                     self.attack_cooldown = 20
                 # verifie que les degats ont ete recus
                 if self.action == 5:
-                    self.health -= self.damageReceived
                     self.hit = False
                     # arrete le coup dun joueur si il etait au milieu dune attaque
                     self.attacking = False
                     self.attack_cooldown = 20
+                    self.health -= self.damageReceived
 
     def attack(self, target):
         if self.attack_cooldown == 0:
