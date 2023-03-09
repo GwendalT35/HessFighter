@@ -44,7 +44,7 @@ audio_img = pygame.image.load("image/button/button_audio.png").convert_alpha()
 keys_img = pygame.image.load("image/button/button_keys.png").convert_alpha()
 back_img = pygame.image.load("image/button/button_back.png").convert_alpha()
 
-#charger images pour le choix des personnages
+# charger images pour le choix des personnages
 playerCoco_img = pygame.image.load("image/Coco/Coco.png")
 playerWizard_img = pygame.image.load("image/Fighter2/wizardChoose.png")
 playerWar_img = pygame.image.load("image/Fighter/warChoose.png")
@@ -163,10 +163,10 @@ magic_fx.set_volume(0.3)
 # victory_fx = pygame.mixer.Sound("audio/siuu.mp3")
 # victory_fx.set_volume(0.3)
 
-#charger image du main menu
+# charger image du main menu
 main_image = pygame.image.load("image/background/main.gif").convert_alpha()
 
-#charger image du choix perso
+# charger image du choix perso
 bg_choixPerso = pygame.image.load("image/background/choix_perso.gif")
 
 # charger image en arriere plan
@@ -296,37 +296,14 @@ while run:
         previous_state = "main"
         del_button(previous_state)
         draw_bg(bg_choixPerso)
-        draw_text(f"Au joueur {len(choix) + 1} de choisir !", font, TEXT_COL,
-                  SCREEN_WIDTH // 3, SCREEN_HEIGHT // 4 * 3)
-        if button_Choix_Perso[0].is_Clicked(screen) and not button_clicked:
-            button_clicked = True
-            choix.append(button_Choix_Perso[0].nom)
-        elif button_Choix_Perso[1].is_Clicked(screen) and not button_clicked:
-            button_clicked = True
-            choix.append(button_Choix_Perso[1].nom)
-        elif button_Choix_Perso[2].is_Clicked(screen) and not button_clicked:
-            button_clicked = True
-            choix.append(button_Choix_Perso[2].nom)
-        elif button_Choix_Perso[3].is_Clicked(screen) and not button_clicked:
-            button_clicked = True
-            choix.append(button_Choix_Perso[3].nom)
-        elif button_Choix_Perso[4].is_Clicked(screen) and not button_clicked:
-            button_clicked = True
-            choix.append(button_Choix_Perso[4].nom)
-        elif button_Choix_Perso[5].is_Clicked(screen) and not button_clicked:
-            button_clicked = True
-            choix.append(button_Choix_Perso[5].nom)
-        elif button_Choix_Perso[6].is_Clicked(screen) and not button_clicked:
-            button_clicked = True
-            choix.append(button_Choix_Perso[6].nom)
-        elif button_Choix_Perso[7].is_Clicked(screen) and not button_clicked:
-            button_clicked = True
-            choix.append(button_Choix_Perso[7].nom)
-        elif button_Choix_Perso[8].is_Clicked(screen) and not button_clicked:
-            button_clicked = True
-            choix.append(button_Choix_Perso[8].nom)
+        playerToChoose = 0
+        if coco_button.draw(screen):
+            choix.append("coco")
+        if wizard_button.draw(screen):
+            choix.append("wizard")
         if len(choix) == 2:
             menu_state = "in_game"
+
     elif menu_state == "in_game":
         previous_state = "choix_perso"
         draw_bg(background_image)
