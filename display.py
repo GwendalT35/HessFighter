@@ -296,14 +296,37 @@ while run:
         previous_state = "main"
         del_button(previous_state)
         draw_bg(bg_choixPerso)
-        playerToChoose = 0
-        if coco_button.draw(screen):
-            choix.append("coco")
-        if wizard_button.draw(screen):
-            choix.append("wizard")
+        draw_text(f"Au joueur {len(choix) + 1} de choisir !", font, TEXT_COL,
+                  SCREEN_WIDTH // 3, SCREEN_HEIGHT // 4 * 3)
+        if button_Choix_Perso[0].is_Clicked(screen) and not button_clicked:
+            button_clicked = True
+            choix.append(button_Choix_Perso[0].nom)
+        elif button_Choix_Perso[1].is_Clicked(screen) and not button_clicked:
+            button_clicked = True
+            choix.append(button_Choix_Perso[1].nom)
+        elif button_Choix_Perso[2].is_Clicked(screen) and not button_clicked:
+            button_clicked = True
+            choix.append(button_Choix_Perso[2].nom)
+        elif button_Choix_Perso[3].is_Clicked(screen) and not button_clicked:
+            button_clicked = True
+            choix.append(button_Choix_Perso[3].nom)
+        elif button_Choix_Perso[4].is_Clicked(screen) and not button_clicked:
+            button_clicked = True
+            choix.append(button_Choix_Perso[4].nom)
+        elif button_Choix_Perso[5].is_Clicked(screen) and not button_clicked:
+            button_clicked = True
+            choix.append(button_Choix_Perso[5].nom)
+        elif button_Choix_Perso[6].is_Clicked(screen) and not button_clicked:
+            button_clicked = True
+            choix.append(button_Choix_Perso[6].nom)
+        elif button_Choix_Perso[7].is_Clicked(screen) and not button_clicked:
+            button_clicked = True
+            choix.append(button_Choix_Perso[7].nom)
+        elif button_Choix_Perso[8].is_Clicked(screen) and not button_clicked:
+            button_clicked = True
+            choix.append(button_Choix_Perso[8].nom)
         if len(choix) == 2:
             menu_state = "in_game"
-
     elif menu_state == "in_game":
         previous_state = "choix_perso"
         draw_bg(background_image)
