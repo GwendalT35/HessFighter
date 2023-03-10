@@ -5,7 +5,7 @@ import time
 class Fighter():
 
     def __init__(self, player, x, y, flip, data, sprite_sheet, animation_steps,
-                 sound, attaque_damage):
+                 sound, attaque_damage, k_settings):
         self.player = player
         self.size = data[0]
         self.image_scale = data[1]
@@ -29,6 +29,7 @@ class Fighter():
         self.alive = True
         self.attack_dmg = attaque_damage
         self.damageReceived = 0
+        self.k_settings = k_settings
 
     def load_images(self, sprite_sheet, animation_steps):
         animation_list = []

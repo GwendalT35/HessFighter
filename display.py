@@ -2,22 +2,19 @@ import pygame
 import button
 import re
 import json
-from io import StringIO
 from pygame import mixer
 from fighter import Fighter
 
 mixer.init()
 pygame.init()
 
-
 # Recuperation des options
 with open("options.json", 'r') as fileOptions:
-    print(fileOptions)
     option = json.load(fileOptions)
-    print(option)
+
 # creer une fenetre de jeu
-SCREEN_WIDTH = 1000
-SCREEN_HEIGHT = 600
+SCREEN_WIDTH = option["video_settings"]["width"]
+SCREEN_HEIGHT = option["video_settings"]["height"]
 
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption("Fighter")
@@ -128,6 +125,7 @@ menu = {
     "multi": multi_button,
     "choix_perso": button_Choix_Perso,
     "options": option_button,
+    "video_settings": [],
     "pause": pause_button,
     "in_game": [],
     "empty": []
@@ -158,16 +156,17 @@ COCO_SCALE = 2
 COCO_OFFSET = [72, 28]
 COCO_DATA = [COCO_SIZE, COCO_SCALE, COCO_OFFSET]
 
+volume = option["audio_settings"]
 # charger la musique et les effets sonores
 pygame.mixer.music.load("audio/smash.mp3")
-pygame.mixer.music.set_volume(0.5)
+pygame.mixer.music.set_volume(volume["music_volume"] / 100)
 pygame.mixer.music.play(-1, 0.0, 5000)
 sword_fx = pygame.mixer.Sound("audio/epee.wav")
-sword_fx.set_volume(0.2)
+sword_fx.set_volume(volume["fx_volume"] / 100)
 ricard_fx = pygame.mixer.Sound("audio/bonk.wav")
-ricard_fx.set_volume(0.3)
+ricard_fx.set_volume(volume["fx_volume"] / 100)
 magic_fx = pygame.mixer.Sound("audio/bonk.wav")
-magic_fx.set_volume(0.3)
+magic_fx.set_volume(volume["fx_volume"] / 100)
 # victory_fx = pygame.mixer.Sound("audio/siuu.mp3")
 # victory_fx.set_volume(0.3)
 
@@ -207,6 +206,9 @@ choix = []
 create_Fighters = True
 fighter_1 = None
 fighter_2 = None
+
+fighter_1_options = option["keyboard_settings"]["p1"]
+fighter_2_options = option["keyboard_settings"]["p2"]
 
 # definir police
 count_font = pygame.font.Font("image/turok.ttf", 80)
@@ -253,6 +255,11 @@ def draw_button(buttonList):
 def del_button(buttonList):
     for b in menu[buttonList]:
         del b
+
+
+def save_options(options):
+    with open("options.json", "w") as fileOptions:
+        fileOptions.write(str(options).replace("'", "\""))
 
 
 # Prompt ip server
@@ -341,8 +348,10 @@ while run:
         game_started = True
         # Cree les personnages
         if create_Fighters == True:
-            fighter_1 = Fighter(1, 200, 310, False, *fighter_choose[choix[0]])
-            fighter_2 = Fighter(2, 700, 310, True, *fighter_choose[choix[1]])
+            fighter_1 = Fighter(1, 200, 310, False, *fighter_choose[choix[0]],
+                                fighter_1_options)
+            fighter_2 = Fighter(2, 700, 310, True, *fighter_choose[choix[1]],
+                                fighter_2_options)
             create_Fighters = False
         # Dessine les stats (Vie + Score)
         draw_stats(fighter_1, fighter_2)
@@ -420,6 +429,7 @@ while run:
         # options du menu options
         if option_button[0].is_Clicked(screen) and not button_clicked:
             button_clicked = True
+            menu_state = "video_settings"
             print("video")
         if option_button[1].is_Clicked(screen) and not button_clicked:
             button_clicked = True
@@ -436,12 +446,21 @@ while run:
             else:
                 game_start = False
                 menu_state = "main"
+    elif menu_state == "video_settings":
+        previous_state = "options"
+        draw_bg(bg_choixPerso)
+        y = 0
+        for settings in option["video_settings"]:
+            draw_text(
+                "{} : {}".format(settings, option["video_settings"][settings]),
+                font, WHITE, 15, SCREEN_HEIGHT // 6 * y)
+            y += 1
     draw_button(menu_state)
     # gestionnaire d'événement
     for event in pygame.event.get():
         if event.type == pygame.KEYDOWN:
             if (event.key == pygame.K_ESCAPE):
-                if menu_state == "main":
+                if menu_state == "in_game":
                     game_paused = True
                     menu_state = "pause"
                 else:

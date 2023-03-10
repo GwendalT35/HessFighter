@@ -1,12 +1,13 @@
 {
-    "video_setting": {
+    "video_settings": {
         "width": 1000,
         "height": 600
     },
-    "audio_setting": {
-        "volume": 100
+    "audio_settings": {
+        "music_volume": 50,
+        "fx_volume": 20
     },
-    "keyboard_setting": {
+    "keyboard_settings": {
         "p1": {
             "attack_1": "K_r",
             "attack_2": "K_t",
