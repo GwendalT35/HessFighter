@@ -1,0 +1,25 @@
+{
+    "video_setting": {
+        "width": 1000,
+        "height": 600
+    },
+    "audio_setting": {
+        "volume": 100
+    },
+    "keyboard_setting": {
+        "p1": {
+            "attack_1": "K_r",
+            "attack_2": "K_t",
+            "jump": "K_z",
+            "forward": "K_d",
+            "backward": "K_q"
+        },
+        "p2": {
+            "attack_1": "K_KP1",
+            "attack_2": "K_KP2",
+            "jump": "K_UP",
+            "forward": "K_RIGHT",
+            "backward": "K_LEFT"
+        }
+    }
+}

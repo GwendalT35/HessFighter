@@ -1,12 +1,20 @@
 import pygame
 import button
 import re
+import json
+from io import StringIO
 from pygame import mixer
 from fighter import Fighter
 
 mixer.init()
 pygame.init()
 
+
+# Recuperation des options
+with open("options.json", 'r') as fileOptions:
+    print(fileOptions)
+    option = json.load(fileOptions)
+    print(option)
 # creer une fenetre de jeu
 SCREEN_WIDTH = 1000
 SCREEN_HEIGHT = 600
@@ -247,7 +255,7 @@ def del_button(buttonList):
         del b
 
 
-#Prompt ip server
+# Prompt ip server
 ip_text = ""
 ipMatch = re.compile(
     r"^((25[0-5]|(2[0-4]|1[0-9]|[1-9]|)[0-9])(\.(?!$)|$)){4}$")
@@ -331,12 +339,12 @@ while run:
         previous_state = "choix_perso"
         draw_bg(background_image)
         game_started = True
-        #Cree les personnages
+        # Cree les personnages
         if create_Fighters == True:
             fighter_1 = Fighter(1, 200, 310, False, *fighter_choose[choix[0]])
             fighter_2 = Fighter(2, 700, 310, True, *fighter_choose[choix[1]])
             create_Fighters = False
-        #Dessine les stats (Vie + Score)
+        # Dessine les stats (Vie + Score)
         draw_stats(fighter_1, fighter_2)
         # changer le compte a rebours
         if intro_count == 0:
@@ -399,6 +407,7 @@ while run:
             choix.clear()
             intro_count = 3
             button_clicked = True
+            game_started = False
             menu_state = "main"
 
     # verifie si le jeu est en pause
@@ -427,22 +436,25 @@ while run:
             else:
                 game_start = False
                 menu_state = "main"
-
     draw_button(menu_state)
     # gestionnaire d'événement
     for event in pygame.event.get():
         if event.type == pygame.KEYDOWN:
-            if (event.key == pygame.K_ESCAPE and menu_state == "in_game"):
-                game_paused = True
-                menu_state = "pause"
+            if (event.key == pygame.K_ESCAPE):
+                if menu_state == "main":
+                    game_paused = True
+                    menu_state = "pause"
+                else:
+                    menu_state = "main"
         if event.type == pygame.MOUSEBUTTONUP:
             button_clicked = False
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_BACKSPACE:
-                ip_text = ip_text[:-1]
-            else:
-                if len(ip_text) <= 16:
-                    ip_text += event.unicode
+        if menu_state == "multi":
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_BACKSPACE:
+                    ip_text = ip_text[:-1]
+                else:
+                    if len(ip_text) <= 16:
+                        ip_text += event.unicode
 
         if event.type == pygame.QUIT:
             run = False
