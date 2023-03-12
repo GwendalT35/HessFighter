@@ -45,6 +45,7 @@ options_img = pygame.image.load(
     "image/button/button_options.png").convert_alpha()
 quit_img = pygame.image.load("image/button/button_quit.png").convert_alpha()
 video_img = pygame.image.load("image/button/button_video.png").convert_alpha()
+apply_img = pygame.image.load("image/button/button_apply.png").convert_alpha()
 audio_img = pygame.image.load("image/button/button_audio.png").convert_alpha()
 keys_img = pygame.image.load("image/button/button_keys.png").convert_alpha()
 back_img = pygame.image.load("image/button/button_back.png").convert_alpha()
@@ -84,7 +85,15 @@ option_button = [
     button.Button(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 5 * 4, back_img, 1,
                   (SCREEN_WIDTH, SCREEN_HEIGHT))
 ]
-
+#video settings menu
+video_button = [
+    button.Button(SCREEN_WIDTH // 2 - apply_img.get_width(),
+                  SCREEN_HEIGHT - 100, apply_img, 1,
+                  (SCREEN_WIDTH, SCREEN_HEIGHT)),
+    button.Button(SCREEN_WIDTH // 2 + back_img.get_width(),
+                  SCREEN_HEIGHT - 100, back_img, 1,
+                  (SCREEN_WIDTH, SCREEN_HEIGHT))
+]
 # Pause Menu
 
 pause_button = [
@@ -125,7 +134,7 @@ menu = {
     "multi": multi_button,
     "choix_perso": button_Choix_Perso,
     "options": option_button,
-    "video_settings": [],
+    "video_settings": video_button,
     "pause": pause_button,
     "in_game": [],
     "empty": []
@@ -298,11 +307,7 @@ while run:
         if not bool(ipMatch.fullmatch(ip_text)):
             draw_text("Entrez une IP valide", font, RED, 15,
                       SCREEN_HEIGHT // 3 + SCREEN_HEIGHT // 4)
-            menu_state = "empty"
-            previous_state = "multi"
-        else:
-            menu_state = "multi"
-            previous_state = "main"
+
         if multi_button[0].is_Clicked(screen) and not button_clicked:
             button_clicked = True
             print("Connexion au server...")
@@ -455,6 +460,13 @@ while run:
                 "{} : {}".format(settings, option["video_settings"][settings]),
                 font, WHITE, 15, SCREEN_HEIGHT // 6 * y)
             y += 1
+
+        if video_button[0].is_Clicked(screen):
+            save_options(option)
+            menu_state = previous_state
+        if video_button[1].is_Clicked(screen):
+            menu_state = previous_state
+
     draw_button(menu_state)
     # gestionnaire d'événement
     for event in pygame.event.get():
@@ -464,7 +476,7 @@ while run:
                     game_paused = True
                     menu_state = "pause"
                 else:
-                    menu_state = "main"
+                    menu_state = previous_state
         if event.type == pygame.MOUSEBUTTONUP:
             button_clicked = False
         if menu_state == "multi":
@@ -472,9 +484,17 @@ while run:
                 if event.key == pygame.K_BACKSPACE:
                     ip_text = ip_text[:-1]
                 else:
-                    if len(ip_text) <= 16:
+                    print(event.unicode.isdigit())
+                    if len(ip_text) <= 16 and (event.unicode.isdigit()
+                                               or event.unicode == "."):
                         ip_text += event.unicode
-
+        elif menu_state == "video_settings":
+            currentOption = option[choixOption]
+            if event.key == pygame.K_BACKSPACE:
+                currentOptions = currentOptions[:-1]
+            else:
+                if len(currentOption) <= 4 and event.unicode.isdigit():
+                    currentOptions += event.unicode
         if event.type == pygame.QUIT:
             run = False
 
