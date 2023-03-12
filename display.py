@@ -135,6 +135,8 @@ menu = {
     "choix_perso": button_Choix_Perso,
     "options": option_button,
     "video_settings": video_button,
+    "audio_settings": video_button,
+    "key_binding": video_button,
     "pause": pause_button,
     "in_game": [],
     "empty": []
@@ -260,12 +262,6 @@ def draw_button(buttonList):
     for button in menu[buttonList]:
         button.draw(screen)
 
-
-def del_button(buttonList):
-    for b in menu[buttonList]:
-        del b
-
-
 def save_options(options):
     with open("options.json", "w") as fileOptions:
         fileOptions.write(str(options).replace("'", "\""))
@@ -314,7 +310,6 @@ while run:
             menu_state = "choix_perso"
     elif menu_state == "choix_perso":
         previous_state = "main"
-        del_button(previous_state)
         draw_bg(bg_choixPerso)
         draw_text(f"Au joueur {len(choix) + 1} de choisir !", font, TEXT_COL,
                   SCREEN_WIDTH // 3, SCREEN_HEIGHT // 4 * 3)
@@ -408,7 +403,6 @@ while run:
             draw_bg(background_image)
             draw_stats(fighter_1, fighter_2)
         previous_state = "in_game"
-        del_button(previous_state)
         if pause_button[0].is_Clicked(screen) and not button_clicked:
             button_clicked = True
             game_paused = False
@@ -430,19 +424,16 @@ while run:
             previous_state = "main"
         else:
             draw_bg(bg_choixPerso)
-        del_button(previous_state)
         # options du menu options
         if option_button[0].is_Clicked(screen) and not button_clicked:
             button_clicked = True
             menu_state = "video_settings"
-            print("video")
         if option_button[1].is_Clicked(screen) and not button_clicked:
             button_clicked = True
-            print("audio")
+            menu_state = "audio_settings"
         if option_button[2].is_Clicked(screen) and not button_clicked:
             button_clicked = True
-            #menu_state == "key_binding"
-            print("key bindings")
+            menu_state = "key_binding"
         if option_button[3].is_Clicked(screen) and not button_clicked:
             button_clicked = True
             if game_started == True:
@@ -451,6 +442,7 @@ while run:
             else:
                 game_start = False
                 menu_state = "main"
+        print(menu_state)
     elif menu_state == "video_settings":
         previous_state = "options"
         draw_bg(bg_choixPerso)
@@ -458,6 +450,21 @@ while run:
         for settings in option["video_settings"]:
             draw_text(
                 "{} : {}".format(settings, option["video_settings"][settings]),
+                font, WHITE, 15, SCREEN_HEIGHT // 10 * y)
+            y += 1
+
+        if video_button[0].is_Clicked(screen):
+            save_options(option)
+            menu_state = previous_state
+        if video_button[1].is_Clicked(screen):
+            menu_state = previous_state
+    elif menu_state == "audio_settings":
+        previous_state = "options"
+        draw_bg(bg_choixPerso)
+        y = 0
+        for settings in option["audio_settings"]:
+            draw_text(
+                "{} : {}".format(settings, option["audio_settings"][settings]),
                 font, WHITE, 15, SCREEN_HEIGHT // 6 * y)
             y += 1
 
@@ -466,7 +473,23 @@ while run:
             menu_state = previous_state
         if video_button[1].is_Clicked(screen):
             menu_state = previous_state
-
+    elif menu_state == "key_binding":
+        previous_state = "options"
+        draw_bg(bg_choixPerso)
+        y=0
+        for settings in option["keyboard_settings"]["p1"]:
+                draw_text(
+                    "{} : {}".format(settings, option["keyboard_settings"]["p1"][settings]),
+                    font, WHITE, 15, SCREEN_HEIGHT // 10 * y)
+                draw_text(
+                    "{} : {}".format(settings, option["keyboard_settings"]["p2"][settings]),
+                    font, WHITE, SCREEN_WIDTH // 2, SCREEN_HEIGHT // 10 * y)
+                y += 1
+        if video_button[0].is_Clicked(screen):
+            save_options(option)
+            menu_state = previous_state
+        if video_button[1].is_Clicked(screen):
+            menu_state = previous_state
     draw_button(menu_state)
     # gestionnaire d'événement
     for event in pygame.event.get():
@@ -489,12 +512,14 @@ while run:
                                                or event.unicode == "."):
                         ip_text += event.unicode
         elif menu_state == "video_settings":
-            currentOption = option[choixOption]
-            if event.key == pygame.K_BACKSPACE:
-                currentOptions = currentOptions[:-1]
-            else:
-                if len(currentOption) <= 4 and event.unicode.isdigit():
-                    currentOptions += event.unicode
+            #currentOption = option[choixOption]
+            currentOption = ""
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_BACKSPACE:
+                    currentOptions = currentOptions[:-1]
+                else:
+                    if len(currentOption) <= 4 and event.unicode.isdigit():
+                        currentOptions += event.unicode
         if event.type == pygame.QUIT:
             run = False
 
