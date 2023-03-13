@@ -4,7 +4,7 @@ import re
 import json
 from pygame import mixer
 from fighter import Fighter
-#test
+
 mixer.init()
 pygame.init()
 
