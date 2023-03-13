@@ -85,7 +85,7 @@ option_button = [
     button.Button(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 5 * 4, back_img, 1,
                   (SCREEN_WIDTH, SCREEN_HEIGHT))
 ]
-#video settings menu
+# video settings menu
 video_button = [
     button.Button(SCREEN_WIDTH // 2 - apply_img.get_width(),
                   SCREEN_HEIGHT - 100, apply_img, 1,
@@ -261,6 +261,7 @@ def draw_stats(fighter1, fighter2):
 def draw_button(buttonList):
     for button in menu[buttonList]:
         button.draw(screen)
+
 
 def save_options(options):
     with open("options.json", "w") as fileOptions:
@@ -442,7 +443,6 @@ while run:
             else:
                 game_start = False
                 menu_state = "main"
-        print(menu_state)
     elif menu_state == "video_settings":
         previous_state = "options"
         draw_bg(bg_choixPerso)
@@ -476,15 +476,17 @@ while run:
     elif menu_state == "key_binding":
         previous_state = "options"
         draw_bg(bg_choixPerso)
-        y=0
+        y = 0
         for settings in option["keyboard_settings"]["p1"]:
-                draw_text(
-                    "{} : {}".format(settings, option["keyboard_settings"]["p1"][settings]),
-                    font, WHITE, 15, SCREEN_HEIGHT // 10 * y)
-                draw_text(
-                    "{} : {}".format(settings, option["keyboard_settings"]["p2"][settings]),
-                    font, WHITE, SCREEN_WIDTH // 2, SCREEN_HEIGHT // 10 * y)
-                y += 1
+            draw_text(
+                "{} : {}".format(
+                    settings, option["keyboard_settings"]["p1"][settings]),
+                font, WHITE, 15, SCREEN_HEIGHT // 10 * y)
+            draw_text(
+                "{} : {}".format(
+                    settings, option["keyboard_settings"]["p2"][settings]),
+                font, WHITE, SCREEN_WIDTH // 2, SCREEN_HEIGHT // 10 * y)
+            y += 1
         if video_button[0].is_Clicked(screen):
             save_options(option)
             menu_state = previous_state
