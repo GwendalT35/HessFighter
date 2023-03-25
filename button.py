@@ -21,7 +21,7 @@ class Button():
         surface.blit(self.image,
                      (self.x - self.width // 2, self.y - self.height // 2))
 
-    def is_Clicked(self, surface):
+    def is_Clicked(self):
         action = False
         # get mouse position
         pos = pygame.mouse.get_pos()

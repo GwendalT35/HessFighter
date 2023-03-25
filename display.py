@@ -2,6 +2,7 @@ import pygame
 import button
 import re
 import json
+import serveur
 from pygame import mixer
 from fighter import Fighter
 
@@ -33,6 +34,7 @@ FPS = 60
 RED = (255, 0, 0)
 YELLOW = (255, 255, 0)
 WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
 TEXT_COL = (255, 255, 255)
 
 # charger les images du menu
@@ -58,7 +60,6 @@ playerWar_img = pygame.image.load("image/Fighter/warChoose.png")
 # creation des menus
 
 # Main menu
-
 main_button = [
     button.Button(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 5, solo_img, 1,
                   (SCREEN_WIDTH, SCREEN_HEIGHT)),
@@ -69,7 +70,7 @@ main_button = [
     button.Button(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 5 * 4, quit_img, 1,
                   (SCREEN_WIDTH, SCREEN_HEIGHT))
 ]
-
+#Multijoueur menu
 multi_button = [
     button.Button(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 5 * 4, play_img, 1,
                   (SCREEN_WIDTH, SCREEN_HEIGHT))
@@ -85,6 +86,7 @@ option_button = [
     button.Button(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 5 * 4, back_img, 1,
                   (SCREEN_WIDTH, SCREEN_HEIGHT))
 ]
+
 # video settings menu
 video_button = [
     button.Button(SCREEN_WIDTH // 2 - apply_img.get_width(),
@@ -94,8 +96,8 @@ video_button = [
                   SCREEN_HEIGHT - 100, back_img, 1,
                   (SCREEN_WIDTH, SCREEN_HEIGHT))
 ]
-# Pause Menu
 
+# Pause Menu
 pause_button = [
     button.Button(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 4, resume_img, 1,
                   (SCREEN_WIDTH, SCREEN_HEIGHT)),
@@ -105,6 +107,8 @@ pause_button = [
                   (SCREEN_WIDTH, SCREEN_HEIGHT))
 ]
 
+#données perso pour crées les bouttons
+#( image, scale, (screen width, screen height), name)
 persoData = [
     (playerCoco_img, 1, (SCREEN_WIDTH, SCREEN_HEIGHT), "coco"),
     (playerWizard_img, 1, (SCREEN_WIDTH, SCREEN_HEIGHT), "wizard"),
@@ -116,11 +120,13 @@ persoData = [
     (playerWizard_img, 1, (SCREEN_WIDTH, SCREEN_HEIGHT), "wizard"),
     (playerWar_img, 1, (SCREEN_WIDTH, SCREEN_HEIGHT), "war"),
 ]
+
 button_Choix_Perso = []
 xMultiplier = 0
 yMultiplier = 0
+#Création des bouttons pour le choix des personnages
+#en fonction de persoData
 for data in persoData:
-
     if (100 + (150 * xMultiplier)) >= SCREEN_WIDTH - 100:
         xMultiplier = 0
         yMultiplier += 1
@@ -129,6 +135,7 @@ for data in persoData:
                       *data))
     xMultiplier += 1
 
+#Dictionnaire des 'menu_state'
 menu = {
     "main": main_button,
     "multi": multi_button,
@@ -141,10 +148,11 @@ menu = {
     "in_game": [],
     "empty": []
 }
+
+# definir variable jeu
 menu_state = "main"
 previous_state = ""
 button_clicked = False
-# definir variable jeu
 intro_count = 3
 last_count_update = pygame.time.get_ticks()
 score = [0, 0]  # score du joueur [player 1, player 2]
@@ -167,8 +175,8 @@ COCO_SCALE = 2
 COCO_OFFSET = [72, 28]
 COCO_DATA = [COCO_SIZE, COCO_SCALE, COCO_OFFSET]
 
-volume = option["audio_settings"]
 # charger la musique et les effets sonores
+volume = option["audio_settings"]
 pygame.mixer.music.load("audio/smash.mp3")
 pygame.mixer.music.set_volume(volume["music_volume"] / 100)
 pygame.mixer.music.play(-1, 0.0, 5000)
@@ -181,31 +189,25 @@ magic_fx.set_volume(volume["fx_volume"] / 100)
 # victory_fx = pygame.mixer.Sound("audio/siuu.mp3")
 # victory_fx.set_volume(0.3)
 
-# charger image du main menu
+#chargement des images
 main_image = pygame.image.load("image/background/main.gif").convert_alpha()
-
-# charger image du choix perso
 bg_choixPerso = pygame.image.load("image/background/choix_perso.gif")
-
-# charger image en arriere plan
 background_image = pygame.image.load(
     "image/background/back.jpg").convert_alpha()
+victory_img = pygame.image.load(
+    "image/background/victory royale.png").convert_alpha()
 
 # charger animation
 warrior_sheet = pygame.image.load("image/Fighter/warrior.png").convert_alpha()
 wizard_sheet = pygame.image.load("image/Fighter2/wizard.png").convert_alpha()
 coco_sheet = pygame.image.load("image/Coco/Coco1.png")
 
-# charger image
-victory_img = pygame.image.load(
-    "image/background/victory royale.png").convert_alpha()
-
 # définition du nombre d'étapes pour chaque animation
 WARRIOR_ANIMATION_STEPS = [10, 8, 3, 7, 7, 3, 7]
 WIZARD_ANIMATION_STEPS = [8, 8, 2, 8, 8, 3, 7]
 COCO_ANIMATION_STEPS = [9, 5, 2, 8, 10, 2, 7]
 
-# creation de deux instance de combattants
+# création des choix de combattants
 fighter_choose = dict()
 fighter_choose["coco"] = (COCO_DATA, coco_sheet, COCO_ANIMATION_STEPS,
                           ricard_fx, 15)
@@ -217,7 +219,6 @@ choix = []
 create_Fighters = True
 fighter_1 = None
 fighter_2 = None
-
 fighter_1_options = option["keyboard_settings"]["p1"]
 fighter_2_options = option["keyboard_settings"]["p2"]
 
@@ -225,19 +226,56 @@ fighter_2_options = option["keyboard_settings"]["p2"]
 count_font = pygame.font.Font("image/turok.ttf", 80)
 score_font = pygame.font.Font("image/turok.ttf", 30)
 
+#Dictionnaire des touches
+toucheDict = dict({"K_a" : "A",
+"K_b" : "B",
+"K_c" : "C",
+"K_d" : "D",
+"K_e" : "E",
+"K_f" : "F",
+"K_g" : "G",
+"K_h" : "H",
+"K_i" : "I",
+"K_j" : "J",
+"K_k" : "K",
+"K_l" : "L",
+"K_m" : "M",
+"K_n" : "N",
+"K_o" : "O",
+"K_p" : "P",
+"K_q" : "Q",
+"K_r" : "R",
+"K_s" : "S",
+"K_t" : "T",
+"K_u" : "U",
+"K_v" : "V",
+"K_w" : "W",
+"K_x" : "X",
+"K_y" : "Y",
+"K_z" : "Z",
+"K_KP1" : "Clic gauche",
+"K_KP2" : "Clic droit",
+"K_UP" : "Fleche du haut",
+"K_LEFT" : "Fleche de gauche",
+"K_RIGHT" : "Fleche de droite",
+"K_SPACE" : "Espace"
+})
+
+# Prompt ip server
+ip_text = ""
+ipMatch = re.compile(
+    r"^((25[0-5]|(2[0-4]|1[0-9]|[1-9]|)[0-9])(\.(?!$)|$)){4}$")
 
 # fonction pour dessiner du texte
 def draw_text(text, font, text_col, x, y):
     text_render = font.render(text, True, text_col)
     screen.blit(text_render, (x, y))
 
-
-# fonction pour dessiner arriere plan
+# fonction pour dessiner l'arriere plan
 def draw_bg(img):
-    scaled_background = pygame.transform.scale(img,
-                                               (SCREEN_WIDTH, SCREEN_HEIGHT))
-    screen.blit(scaled_background, (0, 0))
-
+        scaled_background = pygame.transform.scale(img,
+                                                (SCREEN_WIDTH, SCREEN_HEIGHT))
+        screen.blit(scaled_background, (0, 0))
 
 # fontion pour dessiner barre de vie
 def draw_health_bar(health, x, y):
@@ -246,7 +284,7 @@ def draw_health_bar(health, x, y):
     pygame.draw.rect(screen, RED, (x, y, 400, 30))
     pygame.draw.rect(screen, YELLOW, (x, y, 400 * ratio, 30))
 
-
+# fonction pour dessiner les stats des personnages
 def draw_stats(fighter1, fighter2):
     # afficher stats des joueurs
     draw_health_bar(fighter1.health, 20, 30)
@@ -257,56 +295,54 @@ def draw_stats(fighter1, fighter2):
     fighter_1.draw(screen)
     fighter_2.draw(screen)
 
-
+# fonction pour dessiner les bouttons des menus
 def draw_button(buttonList):
     for button in menu[buttonList]:
         button.draw(screen)
 
-
+# fonction pour sauvegarder les options
 def save_options(options):
     with open("options.json", "w") as fileOptions:
         fileOptions.write(str(options).replace("'", "\""))
 
 
-# Prompt ip server
-ip_text = ""
-ipMatch = re.compile(
-    r"^((25[0-5]|(2[0-4]|1[0-9]|[1-9]|)[0-9])(\.(?!$)|$)){4}$")
 # boucle de jeu
 run = True
 while run:
 
     clock.tick(FPS)
+    # Test des differents 'menu_state'
     if menu_state == "main":
+        draw_bg(main_image)
         if previous_state != "":
             previous_state = ""
-        # dessiner arriere plan
-        draw_bg(main_image)
-        if main_button[0].is_Clicked(screen) and not button_clicked:
+        # Test les bouttons pour savoir s'il son clique 
+        if main_button[0].is_Clicked() and not button_clicked:
             button_clicked = True
             menu_state = "choix_perso"
             choix.clear()
-        if main_button[1].is_Clicked(screen) and not button_clicked:
+        if main_button[1].is_Clicked() and not button_clicked:
             button_clicked = True
             menu_state = "multi"
-        if main_button[2].is_Clicked(screen) and not button_clicked:
+        if main_button[2].is_Clicked() and not button_clicked:
             button_clicked = True
             menu_state = "options"
-        if main_button[3].is_Clicked(screen) and not button_clicked:
+        if main_button[3].is_Clicked() and not button_clicked:
             button_clicked = True
             print("quitting")
             run = False
-    elif menu_state == "multi" or previous_state == "multi":
+    elif menu_state == "multi":
         previous_state = "main"
         draw_bg(bg_choixPerso)
         draw_text(f"Entrez l'IP du serveur: {ip_text}", font, TEXT_COL, 15,
                   SCREEN_HEIGHT // 2)
+        # Test si l'ip est bien de la forme 'XXX.XXX.XXX.XXX'
         if not bool(ipMatch.fullmatch(ip_text)):
             draw_text("Entrez une IP valide", font, RED, 15,
                       SCREEN_HEIGHT // 3 + SCREEN_HEIGHT // 4)
-
-        if multi_button[0].is_Clicked(screen) and not button_clicked:
+        if multi_button[0].is_Clicked() and not button_clicked:
             button_clicked = True
+            
             print("Connexion au server...")
             menu_state = "choix_perso"
     elif menu_state == "choix_perso":
@@ -314,35 +350,36 @@ while run:
         draw_bg(bg_choixPerso)
         draw_text(f"Au joueur {len(choix) + 1} de choisir !", font, TEXT_COL,
                   SCREEN_WIDTH // 3, SCREEN_HEIGHT // 4 * 3)
-        if button_Choix_Perso[0].is_Clicked(screen) and not button_clicked:
+        if button_Choix_Perso[0].is_Clicked() and not button_clicked:
             button_clicked = True
             choix.append(button_Choix_Perso[0].nom)
-        elif button_Choix_Perso[1].is_Clicked(screen) and not button_clicked:
+        elif button_Choix_Perso[1].is_Clicked() and not button_clicked:
             button_clicked = True
             choix.append(button_Choix_Perso[1].nom)
-        elif button_Choix_Perso[2].is_Clicked(screen) and not button_clicked:
+        elif button_Choix_Perso[2].is_Clicked() and not button_clicked:
             button_clicked = True
             choix.append(button_Choix_Perso[2].nom)
-        elif button_Choix_Perso[3].is_Clicked(screen) and not button_clicked:
+        elif button_Choix_Perso[3].is_Clicked() and not button_clicked:
             button_clicked = True
             choix.append(button_Choix_Perso[3].nom)
-        elif button_Choix_Perso[4].is_Clicked(screen) and not button_clicked:
+        elif button_Choix_Perso[4].is_Clicked() and not button_clicked:
             button_clicked = True
             choix.append(button_Choix_Perso[4].nom)
-        elif button_Choix_Perso[5].is_Clicked(screen) and not button_clicked:
+        elif button_Choix_Perso[5].is_Clicked() and not button_clicked:
             button_clicked = True
             choix.append(button_Choix_Perso[5].nom)
-        elif button_Choix_Perso[6].is_Clicked(screen) and not button_clicked:
+        elif button_Choix_Perso[6].is_Clicked() and not button_clicked:
             button_clicked = True
             choix.append(button_Choix_Perso[6].nom)
-        elif button_Choix_Perso[7].is_Clicked(screen) and not button_clicked:
+        elif button_Choix_Perso[7].is_Clicked() and not button_clicked:
             button_clicked = True
             choix.append(button_Choix_Perso[7].nom)
-        elif button_Choix_Perso[8].is_Clicked(screen) and not button_clicked:
+        elif button_Choix_Perso[8].is_Clicked() and not button_clicked:
             button_clicked = True
             choix.append(button_Choix_Perso[8].nom)
         if len(choix) == 2:
             menu_state = "in_game"
+            print(choix)
     elif menu_state == "in_game":
         previous_state = "choix_perso"
         draw_bg(background_image)
@@ -404,16 +441,17 @@ while run:
             draw_bg(background_image)
             draw_stats(fighter_1, fighter_2)
         previous_state = "in_game"
-        if pause_button[0].is_Clicked(screen) and not button_clicked:
+        if pause_button[0].is_Clicked() and not button_clicked:
             button_clicked = True
             game_paused = False
             menu_state = "in_game"
-        if pause_button[1].is_Clicked(screen) and not button_clicked:
+        if pause_button[1].is_Clicked() and not button_clicked:
             button_clicked = True
             menu_state = "options"
             previous_state = "in_game"
-        if pause_button[2].is_Clicked(screen) and not button_clicked:
+        if pause_button[2].is_Clicked() and not button_clicked:
             choix.clear()
+            create_Fighters = True
             intro_count = 3
             button_clicked = True
             game_started = False
@@ -423,19 +461,19 @@ while run:
     elif menu_state == "options":
         if previous_state != "in_game":
             previous_state = "main"
-        else:
-            draw_bg(bg_choixPerso)
+
+        draw_bg(bg_choixPerso)
         # options du menu options
-        if option_button[0].is_Clicked(screen) and not button_clicked:
+        if option_button[0].is_Clicked() and not button_clicked:
             button_clicked = True
             menu_state = "video_settings"
-        if option_button[1].is_Clicked(screen) and not button_clicked:
+        if option_button[1].is_Clicked() and not button_clicked:
             button_clicked = True
             menu_state = "audio_settings"
-        if option_button[2].is_Clicked(screen) and not button_clicked:
+        if option_button[2].is_Clicked() and not button_clicked:
             button_clicked = True
             menu_state = "key_binding"
-        if option_button[3].is_Clicked(screen) and not button_clicked:
+        if option_button[3].is_Clicked() and not button_clicked:
             button_clicked = True
             if game_started == True:
                 menu_state = "pause"
@@ -447,52 +485,59 @@ while run:
         previous_state = "options"
         draw_bg(bg_choixPerso)
         y = 0
+        # ecrit les videos settings
         for settings in option["video_settings"]:
             draw_text(
                 "{} : {}".format(settings, option["video_settings"][settings]),
-                font, WHITE, 15, SCREEN_HEIGHT // 10 * y)
+                font, WHITE, SCREEN_WIDTH // 10, SCREEN_HEIGHT // 10 * y)
             y += 1
 
-        if video_button[0].is_Clicked(screen):
+        if video_button[0].is_Clicked():
             save_options(option)
             menu_state = previous_state
-        if video_button[1].is_Clicked(screen):
+        if video_button[1].is_Clicked():
             menu_state = previous_state
     elif menu_state == "audio_settings":
         previous_state = "options"
         draw_bg(bg_choixPerso)
         y = 0
+        # ecrit les audio settings
         for settings in option["audio_settings"]:
             draw_text(
                 "{} : {}".format(settings, option["audio_settings"][settings]),
                 font, WHITE, 15, SCREEN_HEIGHT // 6 * y)
             y += 1
 
-        if video_button[0].is_Clicked(screen):
+        if video_button[0].is_Clicked():
             save_options(option)
             menu_state = previous_state
-        if video_button[1].is_Clicked(screen):
+            previous_state = "audio_settings"
+        if video_button[1].is_Clicked():
             menu_state = previous_state
     elif menu_state == "key_binding":
         previous_state = "options"
         draw_bg(bg_choixPerso)
-        y = 0
+        y = 1
+        # ecrit les touches
         for settings in option["keyboard_settings"]["p1"]:
+            draw_text("Joueur 1", font, WHITE, SCREEN_WIDTH // 8+15, (SCREEN_HEIGHT // 14) - 30)
             draw_text(
                 "{} : {}".format(
-                    settings, option["keyboard_settings"]["p1"][settings]),
-                font, WHITE, 15, SCREEN_HEIGHT // 10 * y)
+                    settings, toucheDict[option["keyboard_settings"]["p1"][settings]]),
+                font, WHITE, SCREEN_WIDTH // 8, (SCREEN_HEIGHT // 14 + 15) * y)
+            draw_text("Joueur 2", font, WHITE, SCREEN_WIDTH // 2+15, (SCREEN_HEIGHT // 14) - 30)
             draw_text(
                 "{} : {}".format(
-                    settings, option["keyboard_settings"]["p2"][settings]),
-                font, WHITE, SCREEN_WIDTH // 2, SCREEN_HEIGHT // 10 * y)
+                    settings, toucheDict[option["keyboard_settings"]["p2"][settings]]),
+                font, WHITE, SCREEN_WIDTH // 2, (SCREEN_HEIGHT // 14 + 15) * y)
             y += 1
-        if video_button[0].is_Clicked(screen):
+        if video_button[0].is_Clicked():
             save_options(option)
             menu_state = previous_state
-        if video_button[1].is_Clicked(screen):
+        if video_button[1].is_Clicked():
             menu_state = previous_state
     draw_button(menu_state)
+
     # gestionnaire d'événement
     for event in pygame.event.get():
         if event.type == pygame.KEYDOWN:
@@ -505,23 +550,14 @@ while run:
         if event.type == pygame.MOUSEBUTTONUP:
             button_clicked = False
         if menu_state == "multi":
+            # gestionnaires d'ecriture pour l'ip
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_BACKSPACE:
                     ip_text = ip_text[:-1]
                 else:
-                    print(event.unicode.isdigit())
                     if len(ip_text) <= 16 and (event.unicode.isdigit()
                                                or event.unicode == "."):
                         ip_text += event.unicode
-        elif menu_state == "video_settings":
-            #currentOption = option[choixOption]
-            currentOption = ""
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_BACKSPACE:
-                    currentOptions = currentOptions[:-1]
-                else:
-                    if len(currentOption) <= 4 and event.unicode.isdigit():
-                        currentOptions += event.unicode
         if event.type == pygame.QUIT:
             run = False
 
