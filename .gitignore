@@ -1,2 +1,4 @@
 __pycache__
 .vscode/settings.json
+test_serverP2P/alice.py
+test_serverP2P/bob.py
