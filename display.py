@@ -137,8 +137,8 @@ persoData = [
 button_Choix_Perso = []
 xMultiplier = 0
 yMultiplier = 0
-#Création des bouttons pour le choix des personnages
-#en fonction de persoData
+# Création des bouttons pour le choix des personnages
+# en fonction de persoData
 for data in persoData:
     if (100 + (150 * xMultiplier)) >= SCREEN_WIDTH - 100:
         xMultiplier = 0
@@ -148,7 +148,7 @@ for data in persoData:
                       *data))
     xMultiplier += 1
 
-#Dictionnaire des 'menu_state'
+# Dictionnaire des 'menu_state'
 menu = {
     "main": main_button,
     "multi": multi_button,
@@ -202,7 +202,7 @@ magic_fx.set_volume(volume["fx_volume"] / 100)
 # victory_fx = pygame.mixer.Sound("audio/siuu.mp3")
 # victory_fx.set_volume(0.3)
 
-#chargement des images
+# chargement des images
 main_image = pygame.image.load("image/background/main.gif").convert_alpha()
 bg_choixPerso = pygame.image.load("image/background/choix_perso.gif")
 background_image = pygame.image.load(
@@ -384,6 +384,8 @@ input_rect2 ={}
 clicked = ""
 clicked2 = ""
 # fonction pour dessiner du texte
+
+
 def draw_text(text, font, text_col, x, y):
     # print(x, y)
     text_render = font.render(text, True, text_col)
@@ -395,12 +397,16 @@ def draw_text(text, font, text_col, x, y):
     return rect
 
 # fonction pour dessiner l'arriere plan
+
+
 def draw_bg(img):
-        scaled_background = pygame.transform.scale(img,
-                                                (SCREEN_WIDTH, SCREEN_HEIGHT))
-        screen.blit(scaled_background, (0, 0))
+    scaled_background = pygame.transform.scale(img,
+                                               (SCREEN_WIDTH, SCREEN_HEIGHT))
+    screen.blit(scaled_background, (0, 0))
 
 # fontion pour dessiner barre de vie
+
+
 def draw_health_bar(health, x, y):
     ratio = health / 100
     pygame.draw.rect(screen, WHITE, (x - 2, y - 2, 404, 34))
@@ -408,6 +414,8 @@ def draw_health_bar(health, x, y):
     pygame.draw.rect(screen, YELLOW, (x, y, 400 * ratio, 30))
 
 # fonction pour dessiner les stats des personnages
+
+
 def draw_stats(fighter1, fighter2):
     # afficher stats des joueurs
     draw_health_bar(fighter1.health, 20, 30)
@@ -419,6 +427,8 @@ def draw_stats(fighter1, fighter2):
     fighter_2.draw(screen)
 
 # fonction pour dessiner les bouttons des menus
+
+
 def draw_button(buttonList):
     for button in menu[buttonList]:
         button.draw(screen)
@@ -426,6 +436,8 @@ def draw_button(buttonList):
 
 
 # fonction pour sauvegarder les options
+
+
 def save_options(options):
     global menu_state
     option["video_settings"]["width"] = int(option["video_settings"]["width"])
@@ -476,7 +488,7 @@ while run:
         draw_bg(main_image)
         if previous_state != "":
             previous_state = ""
-        # Test les bouttons pour savoir s'il son clique 
+        # Test les bouttons pour savoir s'il son clique
         if main_button[0].is_Clicked() and not button_clicked:
             button_clicked = True
             menu_state = "choix_perso"
