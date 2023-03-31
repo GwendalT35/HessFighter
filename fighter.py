@@ -1,7 +1,6 @@
 import pygame
 import time
 
-
 class Fighter():
 
     def __init__(self, player, x, y, flip, data, sprite_sheet, animation_steps,
@@ -30,6 +29,7 @@ class Fighter():
         self.attack_dmg = attaque_damage
         self.damageReceived = 0
         self.k_settings = k_settings
+        print(k_settings)
 
     def load_images(self, sprite_sheet, animation_steps):
         animation_list = []
@@ -62,19 +62,19 @@ class Fighter():
             # verifie les controles du joueur 1
             if self.player == 1:
                 # mouvement
-                if key[pygame.K_q]:
+                if key[self.k_settings["reculer"]]:
                     dx = -SPEED
                     self.running = True
-                if key[pygame.K_d]:
+                if key[self.k_settings["avancer"]]:
                     dx = SPEED
                     self.running = True
                 # saut
-                if key[pygame.K_z] and self.jump == False:
+                if key[self.k_settings["saut"]] and self.jump == False:
                     self.vel_y = -30
                     self.jump = True
 
                 # attaque
-                if key[pygame.K_r] or key[pygame.K_t]:
+                if key[self.k_settings["attack_1"]] or key[self.k_settings["attack_2"]]:
                     self.attack(target)
                     if key[pygame.K_r]:
                         self.attack_type = 1
@@ -84,19 +84,19 @@ class Fighter():
             # verifie les controles du joueur 2
             if self.player == 2:
                 # mouvement
-                if key[pygame.K_LEFT]:
+                if key[self.k_settings["reculer"]]:
                     dx = -SPEED
                     self.running = True
-                if key[pygame.K_RIGHT]:
+                if key[self.k_settings["avancer"]]:
                     dx = SPEED
                     self.running = True
                 # saut
-                if key[pygame.K_UP] and self.jump == False:
+                if key[self.k_settings["saut"]] and self.jump == False:
                     self.vel_y = -30
                     self.jump = True
 
                 # attaque
-                if key[pygame.K_KP1] or key[pygame.K_KP2]:
+                if key[self.k_settings["attack_1"]] or key[self.k_settings["attack_2"]]:
                     self.attack(target)
                     if key[pygame.K_KP1]:
                         self.attack_type = 1
