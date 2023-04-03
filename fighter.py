@@ -5,7 +5,7 @@ import time
 class Fighter():
 
     def __init__(self, player, x, y, flip, data, sprite_sheet, animation_steps,
-                 sound, attaque_damage, k_settings):
+                 sound, attaque_damage, k_settings, name, multi = False):
         self.player = player
         self.size = data[0]
         self.image_scale = data[1]
@@ -29,8 +29,10 @@ class Fighter():
         self.alive = True
         self.attack_dmg = attaque_damage
         self.damageReceived = 0
+        self.name = name
         self.k_settings = k_settings
-
+        self.multi = multi
+        
     def load_images(self, sprite_sheet, animation_steps):
         animation_list = []
         for y, animation in enumerate(animation_steps):
@@ -46,14 +48,14 @@ class Fighter():
             animation_list.append(temp_img_list)
         return animation_list
 
-    def move(self, screen_width, screen_height, surface, target, round_over):
+    def move(self, screen_width, screen_height, surface, target, round_over, k=""):
         SPEED = 10
         GRAVITY = 2
         dx = 0
         dy = 0
         self.running = False
         self.attack_type = 0
-
+        val_ret = ""
         # get keypresses
         key = pygame.key.get_pressed()
 
@@ -65,15 +67,17 @@ class Fighter():
                 if key[pygame.key.key_code(self.k_settings["reculer"])]:
                     dx = -SPEED
                     self.running = True
+                    val_ret = "backward"
                 if key[pygame.key.key_code(self.k_settings["avancer"])]:
                     dx = SPEED
                     self.running = True
+                    val_ret = "forward"
                 # saut
                 if key[pygame.key.key_code(
                         self.k_settings["saut"])] and self.jump == False:
                     self.vel_y = -30
                     self.jump = True
-
+                    val_ret = "jump"
                 # attaque
                 if key[pygame.key.key_code(
                         self.k_settings["attack_1"])] or key[
@@ -81,34 +85,57 @@ class Fighter():
                     self.attack(target)
                     if key[pygame.key.key_code(self.k_settings["attack_1"])]:
                         self.attack_type = 1
+                        val_ret = "attack_1"
                     if key[pygame.key.key_code(self.k_settings["attack_2"])]:
                         self.attack_type = 2
-
+                        val_ret = "attack_2"
             # verifie les controles du joueur 2
             if self.player == 2:
-                # mouvement
-                if key[pygame.key.key_code(self.k_settings["reculer"])]:
-                    dx = -SPEED
-                    self.running = True
-                if key[pygame.key.key_code(self.k_settings["avancer"])]:
-                    dx = SPEED
-                    self.running = True
-                # saut
-                if key[pygame.key.key_code(
-                        self.k_settings["saut"])] and self.jump == False:
-                    self.vel_y = -30
-                    self.jump = True
+                if self.multi == False:
+                    # mouvement
+                    if key[pygame.key.key_code(self.k_settings["reculer"])]:
+                        dx = -SPEED
+                        self.running = True
+                    if key[pygame.key.key_code(self.k_settings["avancer"])]:
+                        dx = SPEED
+                        self.running = True
+                    # saut
+                    if key[pygame.key.key_code(
+                            self.k_settings["saut"])] and self.jump == False:
+                        self.vel_y = -30
+                        self.jump = True
+                    # attaque
+                    if key[pygame.key.key_code(
+                            self.k_settings["attack_1"])] or key[
+                                pygame.key.key_code(self.k_settings["attack_2"])]:
+                        self.attack(target)
+                        if key[pygame.key.key_code(self.k_settings["attack_1"])]:
+                            self.attack_type = 1
+                        if key[pygame.key.key_code(self.k_settings["attack_2"])]:
+                            self.attack_type = 2
+                else:
+                    if k != "" and k != self.name:
+                        print("movement")
+                        # mouvement
+                        if k == "forward":
+                            dx = -SPEED
+                            self.running = True
+                        if k == "backward":
+                            dx = SPEED
+                            self.running = True
+                        # saut
+                        if k == "jump" and self.jump == False:
+                            self.vel_y = -30
+                            self.jump = True
 
-                # attaque
-                if key[pygame.key.key_code(
-                        self.k_settings["attack_1"])] or key[
-                            pygame.key.key_code(self.k_settings["attack_2"])]:
-                    self.attack(target)
-                    if key[pygame.key.key_code(self.k_settings["attack_1"])]:
-                        self.attack_type = 1
-                    if key[pygame.key.key_code(self.k_settings["attack_2"])]:
-                        self.attack_type = 2
-
+                        # attaque
+                        if k == "attack_1" or k == "attack_2":
+                            self.attack(target)
+                            if k == "attack_1":
+                                self.attack_type = 1
+                            if k == "attack_2":
+                                self.attack_type = 2
+        
         # appliquer graviter
         self.vel_y += GRAVITY
         dy += self.vel_y
@@ -136,7 +163,7 @@ class Fighter():
         self.rect.x += dx
         self.rect.y += dy
 
-
+        return val_ret
 # Evolution animation
 
     def update(self):

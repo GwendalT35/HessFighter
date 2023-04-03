@@ -2,6 +2,9 @@ import pygame
 import button
 import re
 import json
+import threading
+from server import Server
+from client import Client
 from pygame import mixer
 from fighter import Fighter
 
@@ -12,46 +15,48 @@ pygame.init()
 with open("options.json", 'r') as fileOptions:
     option = json.load(fileOptions)
 
-
-# fonction pour recharger les options
-def reload_option(options):
+button_Choix_Perso = []
+persoData = []
+pause_button = []
+video_button = []
+option_button = []
+multi_button = []
+main_button = []
+volume = {}
+fighter_1_options = {}
+fighter_2_options = {}
+SCREEN_WIDTH = 0
+SCREEN_HEIGHT = 0
+ricard_fx = 0
+magic_fx = 0 
+sword_fx = 0
+screen = None
+server = None
+client = None
+def load_videoSettings():
     global screen
-    global SCREEN_WIDTH
+    global SCREEN_WIDTH 
     global SCREEN_HEIGHT
-    global main_button
-    global multi_button
-    global option_button
-    global video_button
-    global pause_button
+    # creer une fenetre de jeu
     SCREEN_WIDTH = option["video_settings"]["width"]
     SCREEN_HEIGHT = option["video_settings"]["height"]
-    # pygame.display.quit()
-    # screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+    if screen == None:
+        screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+    else:
+        pygame.display.quit()
+        screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+    pygame.display.set_caption("HessFighter")
 
+load_videoSettings()
 
-# creer une fenetre de jeu
-SCREEN_WIDTH = option["video_settings"]["width"]
-SCREEN_HEIGHT = option["video_settings"]["height"]
-
-screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-pygame.display.set_caption("Fighter")
-
-# variable du jeu
-game_paused = False
-game_started = False
 # definir la police
 font = pygame.font.Font("image/Turok.ttf", 30)
-
-# définir le taux de rafraîchissement
-clock = pygame.time.Clock()
-FPS = 60
 
 # definir couleur
 RED = (255, 0, 0)
 YELLOW = (255, 255, 0)
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
-TEXT_COL = (255, 255, 255)
 
 # charger les images du menu
 solo_img = pygame.image.load("image/button/button_solo.png").convert_alpha()
@@ -75,81 +80,87 @@ playerWar_img = pygame.image.load("image/Fighter/warChoose.png")
 
 # creation des menus
 # Main menu
-main_button = [
-    button.Button(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 5, solo_img, 1,
-                  (SCREEN_WIDTH, SCREEN_HEIGHT)),
-    button.Button(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 5 * 2, multi_img, 1,
-                  (SCREEN_WIDTH, SCREEN_HEIGHT)),
-    button.Button(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 5 * 3, options_img, 1,
-                  (SCREEN_WIDTH, SCREEN_HEIGHT)),
-    button.Button(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 5 * 4, quit_img, 1,
-                  (SCREEN_WIDTH, SCREEN_HEIGHT))
-]
-#Multijoueur menu
-multi_button = [
-    button.Button(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 5 * 4, play_img, 1,
-                  (SCREEN_WIDTH, SCREEN_HEIGHT))
-]
-# Option Menu
-option_button = [
-    button.Button(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 5, video_img, 1,
-                  (SCREEN_WIDTH, SCREEN_HEIGHT)),
-    button.Button(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 5 * 2, audio_img, 1,
-                  (SCREEN_WIDTH, SCREEN_HEIGHT)),
-    button.Button(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 5 * 3, keys_img, 1,
-                  (SCREEN_WIDTH, SCREEN_HEIGHT)),
-    button.Button(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 5 * 4, back_img, 1,
-                  (SCREEN_WIDTH, SCREEN_HEIGHT))
-]
+def load_menuButton():
+    global pause_button 
+    global video_button 
+    global option_button
+    global multi_button 
+    global main_button
+    print(SCREEN_HEIGHT, SCREEN_WIDTH)
+    main_button = [
+        button.Button(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 5, solo_img, 1,
+                    (SCREEN_WIDTH, SCREEN_HEIGHT)),
+        button.Button(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 5 * 2, multi_img, 1,
+                    (SCREEN_WIDTH, SCREEN_HEIGHT)),
+        button.Button(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 5 * 3, options_img, 1,
+                    (SCREEN_WIDTH, SCREEN_HEIGHT)),
+        button.Button(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 5 * 4, quit_img, 1,
+                    (SCREEN_WIDTH, SCREEN_HEIGHT))
+    ]
+    #Multijoueur menu
+    multi_button = [
+        button.Button(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 5 * 4, play_img, 1,
+                    (SCREEN_WIDTH, SCREEN_HEIGHT))
+    ]
+    # Option Menu
+    option_button = [
+        button.Button(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 5, video_img, 1,
+                    (SCREEN_WIDTH, SCREEN_HEIGHT)),
+        button.Button(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 5 * 2, audio_img, 1,
+                    (SCREEN_WIDTH, SCREEN_HEIGHT)),
+        button.Button(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 5 * 3, keys_img, 1,
+                    (SCREEN_WIDTH, SCREEN_HEIGHT)),
+        button.Button(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 5 * 4, back_img, 1,
+                    (SCREEN_WIDTH, SCREEN_HEIGHT))
+    ]
 
-# video settings menu
-video_button = [
-    button.Button(SCREEN_WIDTH // 2 - apply_img.get_width(),
-                  SCREEN_HEIGHT - 100, apply_img, 1,
-                  (SCREEN_WIDTH, SCREEN_HEIGHT)),
-    button.Button(SCREEN_WIDTH // 2 + back_img.get_width(),
-                  SCREEN_HEIGHT - 100, back_img, 1,
-                  (SCREEN_WIDTH, SCREEN_HEIGHT))
-]
+    # video settings menu
+    video_button = [
+        button.Button(SCREEN_WIDTH // 2 - apply_img.get_width(),
+                    SCREEN_HEIGHT - 100, apply_img, 1,
+                    (SCREEN_WIDTH, SCREEN_HEIGHT)),
+        button.Button(SCREEN_WIDTH // 2 + back_img.get_width(),
+                    SCREEN_HEIGHT - 100, back_img, 1,
+                    (SCREEN_WIDTH, SCREEN_HEIGHT))
+    ]
 
-# Pause Menu
-pause_button = [
-    button.Button(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 4, resume_img, 1,
-                  (SCREEN_WIDTH, SCREEN_HEIGHT)),
-    button.Button(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 4 * 2, options_img, 1,
-                  (SCREEN_WIDTH, SCREEN_HEIGHT)),
-    button.Button(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 4 * 3, quit_img, 1,
-                  (SCREEN_WIDTH, SCREEN_HEIGHT))
-]
-reload_option(option)
-#données perso pour crées les bouttons
-#( image, scale, (screen width, screen height), name)
-persoData = [
-    (playerCoco_img, 1, (SCREEN_WIDTH, SCREEN_HEIGHT), "coco"),
-    (playerWizard_img, 1, (SCREEN_WIDTH, SCREEN_HEIGHT), "wizard"),
-    (playerWar_img, 1, (SCREEN_WIDTH, SCREEN_HEIGHT), "war"),
-    (playerCoco_img, 1, (SCREEN_WIDTH, SCREEN_HEIGHT), "coco"),
-    (playerWizard_img, 1, (SCREEN_WIDTH, SCREEN_HEIGHT), "wizard"),
-    (playerWar_img, 1, (SCREEN_WIDTH, SCREEN_HEIGHT), "war"),
-    (playerCoco_img, 1, (SCREEN_WIDTH, SCREEN_HEIGHT), "coco"),
-    (playerWizard_img, 1, (SCREEN_WIDTH, SCREEN_HEIGHT), "wizard"),
-    (playerWar_img, 1, (SCREEN_WIDTH, SCREEN_HEIGHT), "war"),
-]
+    # Pause Menu
+    pause_button = [
+        button.Button(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 4, resume_img, 1,
+                    (SCREEN_WIDTH, SCREEN_HEIGHT)),
+        button.Button(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 4 * 2, options_img, 1,
+                    (SCREEN_WIDTH, SCREEN_HEIGHT)),
+        button.Button(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 4 * 3, quit_img, 1,
+                    (SCREEN_WIDTH, SCREEN_HEIGHT))
+    ]
+    print(main_button)
+load_menuButton()
 
-button_Choix_Perso = []
-xMultiplier = 0
-yMultiplier = 0
-# Création des bouttons pour le choix des personnages
-# en fonction de persoData
-for data in persoData:
-    if (100 + (150 * xMultiplier)) >= SCREEN_WIDTH - 100:
-        xMultiplier = 0
-        yMultiplier += 1
-    button_Choix_Perso.append(
-        button.Button(100 + (150 * xMultiplier), 100 + (150 * yMultiplier),
-                      *data))
-    xMultiplier += 1
+def load_persoData():
+    global persoData
+    #données perso pour crées les bouttons
+    #( image, scale, (screen width, screen height), name)
+    persoData = [
+        (playerCoco_img, 1, (SCREEN_WIDTH, SCREEN_HEIGHT), "coco"),
+        (playerWizard_img, 1, (SCREEN_WIDTH, SCREEN_HEIGHT), "wizard"),
+        (playerWar_img, 1, (SCREEN_WIDTH, SCREEN_HEIGHT), "war"),
+    ]
 
+
+    xMultiplier = 0
+    yMultiplier = 0
+    # Création des bouttons pour le choix des personnages
+    # en fonction de persoData
+    for data in persoData:
+        if (100 + (150 * xMultiplier)) >= SCREEN_WIDTH - 100:
+            xMultiplier = 0
+            yMultiplier += 1
+        button_Choix_Perso.append(
+            button.Button(100 + (150 * xMultiplier), 100 + (150 * yMultiplier),
+                        *data))
+        xMultiplier += 1
+
+load_persoData()
 # Dictionnaire des 'menu_state'
 menu = {
     "main": main_button,
@@ -173,33 +184,42 @@ last_count_update = pygame.time.get_ticks()
 score = [0, 0]  # score du joueur [player 1, player 2]
 round_over = False
 ROUND_OVER_COOLDOWN = 2000
-
+game_paused = False
+game_started = False
+# définir le taux de rafraîchissement
+clock = pygame.time.Clock()
+FPS = 60
 
 # definir variables combattant
-def load_fighter():
-    WARRIOR_SIZE = 162
-    WARRIOR_SCALE = 4
-    WARRIOR_OFFSET = [72, 56]
-    WARRIOR_DATA = [WARRIOR_SIZE, WARRIOR_SCALE, WARRIOR_OFFSET]
+WARRIOR_SIZE = 162
+WARRIOR_SCALE = 4
+WARRIOR_OFFSET = [72, 56]
+WARRIOR_DATA = [WARRIOR_SIZE, WARRIOR_SCALE, WARRIOR_OFFSET]
 
-    WIZARD_SIZE = 250
-    WIZARD_SCALE = 3
-    WIZARD_OFFSET = [112, 107]
-    WIZARD_DATA = [WIZARD_SIZE, WIZARD_SCALE, WIZARD_OFFSET]
+WIZARD_SIZE = 250
+WIZARD_SCALE = 3
+WIZARD_OFFSET = [112, 107]
+WIZARD_DATA = [WIZARD_SIZE, WIZARD_SCALE, WIZARD_OFFSET]
 
-    COCO_SIZE = 162
-    COCO_SCALE = 2
-    COCO_OFFSET = [72, 28]
-    COCO_DATA = [COCO_SIZE, COCO_SCALE, COCO_OFFSET]
-    return {"warrior": WARRIOR_DATA, "wizard": WIZARD_DATA, "coco": COCO_DATA}
+COCO_SIZE = 162
+COCO_SCALE = 2
+COCO_OFFSET = [72, 28]
+COCO_DATA = [COCO_SIZE, COCO_SCALE, COCO_OFFSET]
 
-
-# charger la musique et les effets sonores
 def load_audio():
-    volume = option["audio_settings"]
-    pygame.mixer.music.load("audio/smash.mp3")
-    pygame.mixer.music.set_volume(volume["music_volume"] / 100)
-    pygame.mixer.music.play(-1, 0.0, 5000)
+    global volume
+    global sword_fx
+    global ricard_fx
+    global magic_fx
+    if volume == {}:
+        # charger la musique et les effets sonores
+        volume = option["audio_settings"]
+        pygame.mixer.music.load("audio/smash.mp3")
+        pygame.mixer.music.set_volume(volume["music_volume"] / 100)
+        pygame.mixer.music.play(-1, 0.0, 5000)
+    else:
+        volume = option["audio_settings"]
+        pygame.mixer.music.set_volume(volume["music_volume"] / 100)
     sword_fx = pygame.mixer.Sound("audio/epee.wav")
     sword_fx.set_volume(volume["fx_volume"] / 100)
     ricard_fx = pygame.mixer.Sound("audio/bonk.wav")
@@ -207,10 +227,10 @@ def load_audio():
     magic_fx = pygame.mixer.Sound("audio/bonk.wav")
     magic_fx.set_volume(volume["fx_volume"] / 100)
 
-    return {"sword": sword_fx, "ricard": ricard_fx, "magic": magic_fx}
     # victory_fx = pygame.mixer.Sound("audio/siuu.mp3")
     # victory_fx.set_volume(0.3)
 
+load_audio()
 
 # chargement des images
 main_image = pygame.image.load("image/background/main.gif").convert_alpha()
@@ -231,16 +251,14 @@ WIZARD_ANIMATION_STEPS = [8, 8, 2, 8, 8, 3, 7]
 COCO_ANIMATION_STEPS = [9, 5, 2, 8, 10, 2, 7]
 
 # création des choix de combattants
-dict_fx = load_audio()
-dict_fighters = load_fighter()
 fighter_choose = dict()
-fighter_choose["coco"] = (dict_fighters["coco"], coco_sheet,
-                          COCO_ANIMATION_STEPS, dict_fx["ricard"], 15)
-fighter_choose["wizard"] = (dict_fighters["wizard"], wizard_sheet,
-                            WIZARD_ANIMATION_STEPS, dict_fx["magic"], 10)
-fighter_choose["war"] = (dict_fighters["warrior"], warrior_sheet,
-                         WARRIOR_ANIMATION_STEPS, dict_fx["sword"], 20)
-choix = []
+fighter_choose["coco"] = (COCO_DATA, coco_sheet,
+                          COCO_ANIMATION_STEPS, ricard_fx, 15)
+fighter_choose["wizard"] = (WIZARD_DATA, wizard_sheet,
+                            WIZARD_ANIMATION_STEPS, magic_fx, 10)
+fighter_choose["war"] = (WARRIOR_DATA, warrior_sheet,
+                         WARRIOR_ANIMATION_STEPS, sword_fx, 20)
+choix = ["", ""]
 create_Fighters = True
 fighter_1 = None
 fighter_2 = None
@@ -261,23 +279,27 @@ input_rect = {}
 input_rect2 = {}
 clicked = ""
 clicked2 = ""
+
+def load_var():
+    load_videoSettings()
+    load_menuButton()
+    load_persoData()
+    load_audio()
+
+
 # fonction pour dessiner du texte
-
-
 def draw_text(text, font, text_col, x, y):
     # print(x, y)
     text_render = font.render(text, True, text_col)
     w, h = text_render.get_width(), text_render.get_height()
     rect = pygame.Rect(x, y, w, h)
-    pygame.draw.rect(screen, RED, rect)
+    # pygame.draw.rect(screen, RED, rect)
     # screen.fill(WHITE)
     screen.blit(text_render, rect)
     return rect
 
 
 # fonction pour dessiner l'arriere plan
-
-
 def draw_bg(img):
     scaled_background = pygame.transform.scale(img,
                                                (SCREEN_WIDTH, SCREEN_HEIGHT))
@@ -285,8 +307,6 @@ def draw_bg(img):
 
 
 # fontion pour dessiner barre de vie
-
-
 def draw_health_bar(health, x, y):
     ratio = health / 100
     pygame.draw.rect(screen, WHITE, (x - 2, y - 2, 404, 34))
@@ -295,8 +315,6 @@ def draw_health_bar(health, x, y):
 
 
 # fonction pour dessiner les stats des personnages
-
-
 def draw_stats(fighter1, fighter2):
     # afficher stats des joueurs
     draw_health_bar(fighter1.health, 20, 30)
@@ -309,16 +327,12 @@ def draw_stats(fighter1, fighter2):
 
 
 # fonction pour dessiner les bouttons des menus
-
-
 def draw_button(buttonList):
     for button in menu[buttonList]:
         button.draw(screen)
 
 
 # fonction pour sauvegarder les options
-
-
 def save_options(options):
     option["video_settings"]["width"] = int(option["video_settings"]["width"])
     option["video_settings"]["height"] = int(
@@ -329,9 +343,8 @@ def save_options(options):
         option["audio_settings"]["fx_volume"])
     with open("options.json", "w") as fileOptions:
         fileOptions.write(str(options).replace("'", "\""))
-
-    reload_option(options)
-
+    
+    load_var()
 
 def handle_input(state, event, text):
     text = str(text)
@@ -388,8 +401,13 @@ while run:
     elif menu_state == "multi":
         previous_state = "main"
         draw_bg(bg_choixPerso)
+        if server == None:
+            server = Server(10000)
+            server_thread = threading.Thread(target=server.start)
+            server_thread.start()
+        
         input_rect.clear()
-        rect = draw_text(f"Entrez l'IP du serveur: {ip_input}", font, TEXT_COL,
+        rect = draw_text(f"Entrez l'IP du serveur: {ip_input}", font, WHITE,
                          15, SCREEN_HEIGHT // 2)
 
         input_rect["ip"] = (rect, 15, SCREEN_HEIGHT // 2)
@@ -399,71 +417,95 @@ while run:
                       SCREEN_HEIGHT // 3 + SCREEN_HEIGHT // 4)
         if multi_button[0].is_Clicked() and not button_clicked:
             button_clicked = True
-            print("Connexion au server...")
-            ip_input = ""
-            input_rect = {}
-            menu_state = "choix_perso"
+            if client == None:
+                try:
+                    print("Connexion au server...")
+                    client = Client(ip_input, 20000)
+                    threading.Thread(target=client.receive_messages).start()
+                    ip_input = ""
+                    input_rect = {}
+                    menu_state = "choix_perso"
+                    previous_state = "multi"
+                except Exception as e:
+                    draw_text("Impossible de se connecter au serveur", font, RED,
+                  SCREEN_HEIGHT // 2 - SCREEN_HEIGHT // 4, 15)
+
     elif menu_state == "choix_perso":
-        previous_state = "main"
+        if previous_state != "multi":
+            previous_state = "main"
         draw_bg(bg_choixPerso)
-        draw_text(f"Au joueur {len(choix) + 1} de choisir !", font, TEXT_COL,
+        draw_text(f"Au joueur {len(choix) + 1} de choisir !", font, WHITE,
                   SCREEN_WIDTH // 5 * 2, SCREEN_HEIGHT // 4 * 3)
-        if button_Choix_Perso[0].is_Clicked() and not button_clicked:
-            button_clicked = True
-            choix.append(button_Choix_Perso[0].nom)
-        elif button_Choix_Perso[1].is_Clicked() and not button_clicked:
-            button_clicked = True
-            choix.append(button_Choix_Perso[1].nom)
-        elif button_Choix_Perso[2].is_Clicked() and not button_clicked:
-            button_clicked = True
-            choix.append(button_Choix_Perso[2].nom)
-        elif button_Choix_Perso[3].is_Clicked() and not button_clicked:
-            button_clicked = True
-            choix.append(button_Choix_Perso[3].nom)
-        elif button_Choix_Perso[4].is_Clicked() and not button_clicked:
-            button_clicked = True
-            choix.append(button_Choix_Perso[4].nom)
-        elif button_Choix_Perso[5].is_Clicked() and not button_clicked:
-            button_clicked = True
-            choix.append(button_Choix_Perso[5].nom)
-        elif button_Choix_Perso[6].is_Clicked() and not button_clicked:
-            button_clicked = True
-            choix.append(button_Choix_Perso[6].nom)
-        elif button_Choix_Perso[7].is_Clicked() and not button_clicked:
-            button_clicked = True
-            choix.append(button_Choix_Perso[7].nom)
-        elif button_Choix_Perso[8].is_Clicked() and not button_clicked:
-            button_clicked = True
-            choix.append(button_Choix_Perso[8].nom)
-        if len(choix) == 2:
+        if previous_state == "multi":
+            if button_Choix_Perso[0].is_Clicked() and not button_clicked:
+                button_clicked = True
+                choix[0] = button_Choix_Perso[0].nom
+            elif button_Choix_Perso[1].is_Clicked() and not button_clicked:
+                button_clicked = True
+                choix[0] = button_Choix_Perso[1].nom
+            elif button_Choix_Perso[2].is_Clicked() and not button_clicked:
+                button_clicked = True
+                choix[0] = button_Choix_Perso[2].nom
+            if  choix[0] != "":
+                server.send(choix[0])
+                message = client.get_decrypted_message()
+                if message:
+                    choix[1] = message
+        else:
+            if button_Choix_Perso[0].is_Clicked() and not button_clicked:
+                button_clicked = True
+                choix.append(button_Choix_Perso[0].nom)
+            elif button_Choix_Perso[1].is_Clicked() and not button_clicked:
+                button_clicked = True
+                choix.append(button_Choix_Perso[1].nom)
+            elif button_Choix_Perso[2].is_Clicked() and not button_clicked:
+                button_clicked = True
+                choix.append(button_Choix_Perso[2].nom)
+        if len(choix) == 2 and choix[1] != "":
             menu_state = "in_game"
+            if previous_state == "multi":
+                client.set_decrypted_message("")
     elif menu_state == "in_game":
-        previous_state = "choix_perso"
         draw_bg(background_image)
         game_started = True
         # Cree les personnages
         if create_Fighters == True:
-            fighter_1 = Fighter(1, SCREEN_WIDTH // 5, SCREEN_HEIGHT - 290,
-                                False, *fighter_choose[choix[0]],
-                                fighter_1_options)
-            fighter_2 = Fighter(2, SCREEN_WIDTH // 6 * 5, SCREEN_HEIGHT - 290,
-                                True, *fighter_choose[choix[1]],
-                                fighter_2_options)
+            if server != None:
+                fighter_1 = Fighter(1, SCREEN_WIDTH // 5, SCREEN_HEIGHT - 290,
+                                    False, *fighter_choose[choix[0]],
+                                    fighter_1_options, choix[0])
+                fighter_2 = Fighter(2, SCREEN_WIDTH // 6 * 5, SCREEN_HEIGHT - 290,
+                                    True, *fighter_choose[choix[1]],
+                                    client.get_decrypted_message(), choix[1], True)
+            else:
+                fighter_1 = Fighter(1, SCREEN_WIDTH // 5, SCREEN_HEIGHT - 290,
+                                    False, *fighter_choose[choix[0]],
+                                    fighter_1_options, choix[0])
+                fighter_2 = Fighter(2, SCREEN_WIDTH // 6 * 5, SCREEN_HEIGHT - 290,
+                                    True, *fighter_choose[choix[1]],
+                                    fighter_2_options, choix[1])
             create_Fighters = False
         # Dessine les stats (Vie + Score)
         draw_stats(fighter_1, fighter_2)
         # changer le compte a rebours
         if intro_count == 0:
-            # Deplacement joueurs
-            fighter_1.move(SCREEN_WIDTH, SCREEN_HEIGHT, screen, fighter_2,
-                           round_over)
-            fighter_2.move(SCREEN_WIDTH, SCREEN_HEIGHT, screen, fighter_1,
-                           round_over)
+            if server != None:
+                # Deplacement joueurs
+                mvt = fighter_1.move(SCREEN_WIDTH, SCREEN_HEIGHT, screen, fighter_2,
+                            round_over)
+                if mvt != None:
+                    server.send(mvt)
+                fighter_2.move(SCREEN_WIDTH, SCREEN_HEIGHT, screen, fighter_1,
+                            round_over, client.get_decrypted_message())
+            else:
+                fighter_1.move(SCREEN_WIDTH, SCREEN_HEIGHT, screen, fighter_2,
+                            round_over)
+                fighter_2.move(SCREEN_WIDTH, SCREEN_HEIGHT, screen, fighter_1,
+                            round_over)
         else:
-
             # affichage du compte a rebours
             draw_text(str(intro_count), count_font, RED, SCREEN_WIDTH // 2,
-                      SCREEN_HEIGHT // 3)
+                        SCREEN_HEIGHT // 3)
 
             # evolution du temps
             if (pygame.time.get_ticks() -
@@ -495,7 +537,7 @@ while run:
                 round_over = False
                 intro_count = 3
                 create_Fighters = True
-        draw_text("Press ECHAP to pause", font, TEXT_COL, 15,
+        draw_text("Press ECHAP to pause", font, WHITE, 15,
                   (SCREEN_HEIGHT // 32) * 31)
 
     elif menu_state == "pause":
@@ -618,6 +660,9 @@ while run:
 
     for event in events:
         if event.type == pygame.KEYDOWN:
+            if server != None and menu_state == "in_game":
+                key = pygame.key.name(event.key)
+                server.send(key)
             if (event.key == pygame.K_ESCAPE):
                 if menu_state == "in_game":
                     game_paused = True
@@ -626,6 +671,10 @@ while run:
                     pass
                 else:
                     menu_state = previous_state
+        if server != None and menu_state == "in_game":
+            if event.type == pygame.KEYUP:
+                key = ""
+                server.send(key)
         if event.type == pygame.MOUSEBUTTONUP:
             button_clicked = False
         if event.type == pygame.MOUSEBUTTONDOWN:
