@@ -9,5 +9,5 @@ installer les packages nécessaires aux lancements du jeu : <br>
 ```
 
 # Multiplayer
-Pour pouvoir écrire l'adresse IP il faut clic gauche sur le texte "Entrez l'IP du serveur"
+Pour pouvoir écrire l'adresse IP il faut clic gauche sur le texte "Entrez l'IP du serveur" <br>
 Pour quitter appuyer sur "Échap"
